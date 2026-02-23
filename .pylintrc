@@ -1,0 +1,252 @@
+[MASTER]
+# Ensure the project root is always on sys.path for absolute imports
+init-hook='import sys, os; sys.path.append(os.path.abspath(os.path.dirname(__file__)))'
+
+ignore=CVS
+ignore-patterns=
+ignore-paths=
+persistent=yes
+load-plugins=
+jobs=1
+unsafe-load-any-extension=no
+extension-pkg-whitelist=
+
+[MESSAGES CONTROL]
+disable=
+    # Import warnings
+    import-error,            # C0411: Unable to import module
+    import-outside-toplevel, # C0415: Import outside toplevel
+    relative-beyond-top-level, # W0402: Relative import beyond top-level package
+    
+    # Documentation warnings
+    missing-module-docstring,    # C0114
+    missing-class-docstring,     # C0115
+    missing-function-docstring,  # C0116
+    
+    # Formatting and style
+    line-too-long,          # C0301
+    trailing-whitespace,    # C0303
+    
+    # Variable naming
+    invalid-name,           # C0103
+    
+    # Refactoring suggestions
+    too-few-public-methods, 
+    too-many-arguments,     
+    too-many-locals,        
+    too-many-branches,      
+    too-many-statements,    
+    too-many-instance-attributes, 
+    
+    # Design issues
+    global-statement,       
+    broad-except,           
+    
+    # Logging format
+    logging-format-interpolation, 
+    logging-fstring-interpolation, 
+    
+    # Fixme comments
+    fixme,                  
+    
+    # Unused variables
+    unused-argument,        
+    unused-variable,        
+    
+    # Type checking (if using mypy separately)
+    no-member,              
+    not-callable,           
+    
+    # Class attribute access
+    attribute-defined-outside-init 
+
+enable=
+    useless-suppression
+
+[REPORTS]
+# Set the output format. Available formats are text, parseable, colorized, msvs
+# (visual studio) and html. You can also give a reporter class.
+output-format=text
+
+# Tells whether to display a full report or only the messages
+reports=yes
+
+# Python expression which should return a note less than 10 (10 is the highest
+# note). You have access to the variables errors warning, statement which
+# respectively contain the number of errors / warnings messages and the total
+# number of statements analyzed.
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[REFACTORING]
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
+
+[BASIC]
+# Naming style matching correct argument names
+argument-naming-style=snake_case
+
+# Naming style matching correct attribute names
+attr-naming-style=snake_case
+
+# Naming style matching correct class names
+class-naming-style=PascalCase
+
+# Naming style matching correct constant names
+const-naming-style=UPPER_CASE
+
+# Naming style matching correct function names
+function-naming-style=snake_case
+
+# Naming style matching correct method names
+method-naming-style=snake_case
+
+# Naming style matching correct module names
+module-naming-style=snake_case
+
+# Naming style matching correct variable names
+variable-naming-style=snake_case
+
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,pk,db
+
+# Bad variable names which should always be refused
+bad-names=foo,bar,baz,toto,tutu,tata
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=88
+
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+# Allow the body of an if to be on the same line as the test if there is no
+# else.
+single-line-if-stmt=no
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+# String used as indentation unit.
+indent-string='    '
+
+# Number of spaces of indent required inside a hanging  or continued line.
+indent-after-paren=4
+
+[LOGGING]
+# Logging modules to check that the string format arguments are in logging
+# function parameter format
+logging-modules=logging
+
+[MISCELLANEOUS]
+# List of note tags to take in consideration, separated by a comma.
+notes=FIXME,XXX,TODO
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=4
+
+# Ignore comments when computing similarities.
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=no
+
+[SPELLING]
+# Spelling dictionary name.
+spelling-dict=
+
+# List of comma separated words that should not be checked.
+spelling-ignore-words=
+
+# A path to a file that contains private dictionary; one word per line.
+spelling-private-dict-file=
+
+# Tells whether to store unknown words to indicated private dictionary in
+# --spelling-private-dict-file option instead of raising a message.
+spelling-store-unknown-words=no
+
+[TYPECHECK]
+# List of decorators that produce context managers
+contextmanager-decorators=contextlib.contextmanager
+
+# List of members which are set dynamically and missed by pylint inference
+# system, and so shouldn't trigger E1101 when accessed.
+generated-members=
+
+# Tells whether missing members accessed in mixin class should be ignored.
+ignore-mixin-members=yes
+
+# List of module names for which member attributes should not be checked
+ignored-modules=
+
+# List of class names for which member attributes should not be checked
+ignored-classes=optparse.Values,thread._local,_thread._local
+
+# List of modules that can be imported at any level, not just the top level
+allow-any-import-level=
+
+[VARIABLES]
+# Tells whether we should check for unused import in __init__ files.
+init-import=no
+
+# A regular expression matching the name of dummy variables (i.e. expectedly
+# not used).
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+# List of additional names supposed to be defined in builtins.
+additional-builtins=
+
+# List of strings which can identify a callback function by name.
+callbacks=cb_,_cb
+
+[CLASSES]
+# List of method names used to declare (i.e. assign) instance attributes.
+defining-attr-methods=__init__,__new__,setUp
+
+# List of member names, which should be excluded from the protected access
+# warning.
+exclude-protected=_asdict,_fields,_replace,_source,_make
+
+# List of valid names for the first argument in a class method.
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method.
+valid-metaclass-classmethod-first-arg=mcs
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=5
+
+# Maximum number of attributes for a class
+max-attributes=7
+
+# Maximum number of boolean expressions in a if statement
+max-bool-expr=5
+
+# Maximum number of branch for function / method body
+max-branches=12
+
+# Maximum number of locals for function / method body
+max-locals=15
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+# Minimum number of public methods for a class
+min-public-methods=2
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught.
+overgeneral-exceptions=Exception
