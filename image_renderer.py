@@ -86,23 +86,26 @@ class ImageRenderer:
         if not languages:
             return y
         
-        badge_height = 24
-        badge_spacing = 8
         padding_x = 10
-        padding_y = 5
+        padding_y = 4
+        badge_spacing = 8
         current_x = x
         current_y = y
+
+        # Derive badge height from the actual font metrics so it's always correct
+        sample_bbox = self.generator.font_small.getbbox("Ag")
+        font_height = sample_bbox[3] - sample_bbox[1]
+        badge_height = font_height + (padding_y * 2)
         
         for language in languages:
-            # Get badge color
             bg_color = self.LANGUAGE_COLORS.get(language, "#666666")
             
-            # Measure text
+            # Measure text — getbbox returns (left, top, right, bottom)
             text_bbox = self.generator.font_small.getbbox(language)
             text_width = text_bbox[2] - text_bbox[0]
             badge_width = text_width + (2 * padding_x)
             
-            # Check if we need to wrap to next line
+            # Wrap to next row if needed
             if current_x + badge_width > x + max_width and current_x > x:
                 current_x = x
                 current_y += badge_height + badge_spacing
@@ -115,22 +118,32 @@ class ImageRenderer:
                 fill=bg_color
             )
             
-            # Draw text centered in badge
-            text_x = current_x + padding_x
-            text_y = current_y + padding_y
-            draw.text((text_x, text_y), language, 
-                     font=self.generator.font_small, fill="#FFFFFF")
+            # Centre text both horizontally and vertically inside the badge.
+            # Subtract bbox[0]/bbox[1] to cancel out any internal bearing offsets
+            # so the visible glyph is truly centred rather than the logical origin.
+            text_x = current_x + padding_x - text_bbox[0]
+            text_y = current_y + padding_y - text_bbox[1]
+            draw.text((text_x, text_y), language,
+                      font=self.generator.font_small, fill="#FFFFFF")
             
             current_x += badge_width + badge_spacing
         
         return current_y + badge_height + (badge_spacing * 2)
     
+    def line_height(self, font: Any) -> float:
+        """Return a stable line height for a font using a tall reference string."""
+        bbox = font.getbbox("Ágjy")
+        return (bbox[3] - bbox[1]) * self.generator.line_spacing
+
     def draw_text_block(self, draw: Any, text: str, font: Any, color: str, 
                         x: float, y: float, max_width: float) -> float:
         """Draw a block of text with wrapping and paragraph support, return the new y position."""
         current_y: float = y
-        
-        # Split text into paragraphs on double newlines or single newlines
+
+        # Pre-compute a stable line height using a tall reference string so all
+        # lines in the block are evenly spaced regardless of their content.
+        lh = self.line_height(font)
+
         paragraphs = text.split('\n\n') if '\n\n' in text else text.split('\n')
         
         for i, paragraph in enumerate(paragraphs):
@@ -141,12 +154,12 @@ class ImageRenderer:
             lines: list[str] = self.wrap_text(paragraph, font, max_width)
             
             for line in lines:
-                draw.text((x, current_y), line, font=font, fill=color)
-                bbox: Any = font.getbbox(line)
-                line_height: Any = bbox[3] - bbox[1]
-                current_y += line_height * self.generator.line_spacing
+                # Offset by bbox[1] so the visible top of the glyph sits at current_y
+                bbox = font.getbbox(line)
+                draw.text((x, current_y - bbox[1]), line, font=font, fill=color)
+                current_y += lh
             
-            # Add extra spacing between paragraphs (except after the last one)
+            # Extra spacing between paragraphs (not after the last one)
             if i < len(paragraphs) - 1:
                 current_y += self.generator.section_spacing * 0.5
         
@@ -154,64 +167,64 @@ class ImageRenderer:
     
     def calculate_column_heights(self, data: DictionaryData, left_col_width: float, right_col_width: float) -> tuple[float, float]:
         """Calculate heights for left and right columns."""
-        # Left column: word, pronunciation, language badges, definitions, synonyms
+        lh_main  = self.line_height(self.generator.font_main)
+        lh_large = self.line_height(self.generator.font_large)
+        lh_small = self.line_height(self.generator.font_small)
+        lh_ipa   = self.line_height(self.generator.font_ipa)
+        ss = self.generator.section_spacing
+
+        # ── Left column ────────────────────────────────────────────────
         left_height: float = 0
-        
-        # Word and pronunciation
-        left_height += int(self.generator.font_large.getbbox("A")[3] * self.generator.line_spacing)
+
+        left_height += lh_large                                      # word
         if data.pronunciation:
-            left_height += int(self.generator.font_ipa.getbbox("A")[3] * self.generator.line_spacing)
-        
-        # Language badges
+            left_height += lh_ipa                                    # IPA
+
         if data.origin_languages:
-            # Estimate badge height (may wrap to multiple lines)
+            sample_bbox = self.generator.font_small.getbbox("Ag")
+            badge_h = (sample_bbox[3] - sample_bbox[1]) + 8         # font_height + 2×padding
+            badge_spacing = 8
             num_badges = len(data.origin_languages)
-            estimated_rows = (num_badges + 2) // 3  # Rough estimate
-            left_height += estimated_rows * 32  # badge height + spacing
-            left_height += self.generator.section_spacing * 0.3
-        
-        left_height += self.generator.section_spacing
-        
-        # Definitions
+            estimated_rows = max(1, (num_badges + 2) // 3)
+            left_height += estimated_rows * (badge_h + badge_spacing)
+            left_height += ss * 0.3
+
+        left_height += ss
+
         for definition in data.definitions:
-            left_height += int(self.generator.font_small.getbbox("A")[3] * self.generator.line_spacing)
+            left_height += lh_small                                  # part-of-speech label
             def_lines = self.wrap_text(definition["definition"], self.generator.font_main, left_col_width - 10)
-            left_height += len(def_lines) * int(self.generator.font_main.getbbox("A")[3] * self.generator.line_spacing)
+            left_height += len(def_lines) * lh_main
             if definition.get("usage"):
-                # Add extra vertical spacing before usage example
-                left_height += self.generator.section_spacing * 0.3
+                left_height += ss * 0.3
                 usage_lines = self.wrap_text(f'"{definition["usage"]}"', self.generator.font_small, left_col_width - 30)
-                left_height += len(usage_lines) * int(self.generator.font_small.getbbox("A")[3] * self.generator.line_spacing)
-            left_height += self.generator.section_spacing
-        
-        # Synonyms
+                left_height += len(usage_lines) * lh_small
+            left_height += ss
+
         if data.synonyms:
-            left_height += int(self.generator.font_small.getbbox("A")[3] * self.generator.line_spacing)
-            syn_text = ", ".join(data.synonyms)
-            syn_lines = self.wrap_text(syn_text, self.generator.font_main, left_col_width - 10)
-            left_height += len(syn_lines) * int(self.generator.font_main.getbbox("A")[3] * self.generator.line_spacing)
-            left_height += self.generator.section_spacing
-        
-        # Right column: etymology & additional etymology
+            left_height += lh_small                                  # "Synonyms:" label
+            syn_lines = self.wrap_text(", ".join(data.synonyms), self.generator.font_main, left_col_width - 10)
+            left_height += len(syn_lines) * lh_main
+            left_height += ss
+
+        # ── Right column ───────────────────────────────────────────────
         right_height: float = 0
         combined_etymology = data.get_combined_etymology()
         if combined_etymology:
-            right_height += int(self.generator.font_small.getbbox("A")[3] * self.generator.line_spacing)
-            
-            # Handle paragraphs for height calculation
+            right_height += lh_small                                 # section label
+
             paragraphs = combined_etymology.split('\n\n') if '\n\n' in combined_etymology else combined_etymology.split('\n')
             for i, paragraph in enumerate(paragraphs):
                 paragraph = paragraph.strip()
                 if not paragraph:
                     continue
                 etym_lines = self.wrap_text(paragraph, self.generator.font_main, right_col_width - 20)
-                right_height += len(etym_lines) * int(self.generator.font_main.getbbox("A")[3] * self.generator.line_spacing)
-                # Add paragraph spacing
+                right_height += len(etym_lines) * lh_main
                 if i < len(paragraphs) - 1:
-                    right_height += self.generator.section_spacing * 0.5
-            
-            right_height += self.generator.section_spacing
-        
+                    right_height += ss * 0.5
+
+            right_height += ss
+
         return left_height, right_height
     
     def render_left_column(self, draw: Any, data: DictionaryData, 
@@ -222,14 +235,14 @@ class ImageRenderer:
         # Word title
         draw.text((x, current_y), data.word, 
                     font=self.generator.font_large, fill=self.generator.accent_color)
-        current_y += int(self.generator.font_large.getbbox(data.word)[3] * self.generator.line_spacing)
+        current_y += self.line_height(self.generator.font_large)
         
         # Pronunciation
         if data.pronunciation:
             pronunciation: str = f"/{data.pronunciation}/"
             draw.text((x, current_y), pronunciation, 
                         font=self.generator.font_ipa, fill=self.generator.secondary_color)
-            current_y += int(self.generator.font_ipa.getbbox(pronunciation)[3] * self.generator.line_spacing)
+            current_y += self.line_height(self.generator.font_ipa)
         
         # Language origin badges
         if data.origin_languages:
@@ -243,10 +256,9 @@ class ImageRenderer:
         for i, definition in enumerate(data.definitions):
             part_of_speech: str = definition.get("part_of_speech", "")
             if part_of_speech:
-                # Use part of speech as label instead of "Definition 1"
                 draw.text((x, current_y), f"- {part_of_speech}", 
                         font=self.generator.font_small, fill=self.generator.accent_color)
-                current_y += int(self.generator.font_small.getbbox(part_of_speech)[3] * self.generator.line_spacing)
+                current_y += self.line_height(self.generator.font_small)
             
             def_text: str = definition.get("definition", "")
             current_y = self.draw_text_block(draw, def_text, self.generator.font_main, 
@@ -254,7 +266,6 @@ class ImageRenderer:
                                             current_y, col_width - 10)
             
             if definition.get("usage"):
-                # Add extra vertical spacing before usage example
                 current_y += self.generator.section_spacing * 0.3
                 usage_text: str = f'"{definition["usage"]}"'
                 current_y = self.draw_text_block(draw, usage_text, self.generator.font_small, 
@@ -267,7 +278,7 @@ class ImageRenderer:
         if data.synonyms:
             draw.text((x, current_y), "Synonyms:", 
                         font=self.generator.font_small, fill=self.generator.accent_color)
-            current_y += int(self.generator.font_small.getbbox("Synonyms:")[3] * self.generator.line_spacing)
+            current_y += self.line_height(self.generator.font_small)
             
             text = ", ".join(data.synonyms)
             current_y = self.draw_text_block(draw, text, self.generator.font_main, 
@@ -285,13 +296,9 @@ class ImageRenderer:
         
         combined_etymology = data.get_combined_etymology()
         if combined_etymology:
-            # Debug: print the full etymology text
-            print(f"[DEBUG] Combined etymology length: {len(combined_etymology)}")
-            print(f"[DEBUG] Number of paragraphs: {len(combined_etymology.split(chr(10)+chr(10)))}")
-            
             draw.text((x, current_y), "Etymology & Additional Etymology:", 
                         font=self.generator.font_small, fill=self.generator.accent_color)
-            current_y += int(self.generator.font_small.getbbox("Etymology")[3] * self.generator.line_spacing)
+            current_y += self.line_height(self.generator.font_small)
             
             current_y = self.draw_text_block(draw, combined_etymology, self.generator.font_main, 
                                             self.generator.text_color, x + 20, 

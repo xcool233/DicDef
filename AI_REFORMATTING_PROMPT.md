@@ -1,4 +1,4 @@
-I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **[WORD]**.
+I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **Finicky**.
 
 ### Required Format Specifications:
 
@@ -45,7 +45,7 @@ ADDITIONAL_ETYMOLOGY: [detailed etymology with multiple paragraphs if needed]
 - Right column shows: detailed etymology
 - Use paragraph breaks in ADDITIONAL_ETYMOLOGY (double line breaks) for better readability
 
-Please format the entry for **[WORD]** following these specifications exactly.
+Please format the entry for **Finicky** following these specifications exactly.
 
 ---
 
