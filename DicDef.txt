@@ -1,0 +1,19 @@
+WORD: Riveting
+
+PRONUNCIATION: ˈrɪvɪtɪŋ
+
+DEFINITION: So interesting or exciting that it holds one's attention completely; extremely fascinating or engrossing.
+PART_OF_SPEECH: Adjective
+USAGE: As usual, she gave a riveting performance.
+
+DEFINITION: Commanding attention in a compelling way; captivating through intensity or excitement.
+PART_OF_SPEECH: Adjective
+USAGE: The documentary provided a riveting look at life in the Amazon rainforest.
+
+SYNONYMS: engrossing, fascinating, gripping, enthralling
+
+ETYMOLOGY: Derived from the verb "rivet," which comes from Middle English "riveten" (early 15th century), meaning "to fasten with rivets" or "to fasten a nail or bolt by hammering down the rivet." The noun "rivet" comes from Old French "rivet" (13th century), from the verb "river" meaning "to fetter" or "to attach," which itself derives from Old French "rive" (meaning "rim, edge"), ultimately from Latin "ripa" (riverbank).
+
+ADDITIONAL_ETYMOLOGY: The figurative sense of "rivet" meaning "to command the attention" or "to fix the attention" emerged around 1600, appearing in Shakespeare's "Hamlet" ("For I mine eyes will rivet to his Face"). The adjective form "riveting" developed from this figurative usage, with the modern sense of "commanding attention" or "absolutely fascinating" first recorded in 1854. 
+
+An earlier figurative sense meaning "clinching" (as of an argument) appeared in the 1670s. The word draws its metaphorical power from the literal action of riveting—just as a rivet permanently fastens metal pieces together, something riveting "fastens" one's attention in place, making it impossible to look away.
