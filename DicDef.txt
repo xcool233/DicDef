@@ -1,20 +1,22 @@
-WORD: Finicky
-PRONUNCIATION: ˈfɪnɪki
+WORD: Gormless
+PRONUNCIATION: ˈɡɔːmləs
 
-DEFINITION: Excessively particular or hard to please, especially about small details.
-PART_OF_SPEECH: adjective
-USAGE: She’s so finicky about her coffee that she weighs the beans before grinding them.
+DEFINITION: Lacking intelligence, sense, or initiative; foolish and dim-witted
+PART_OF_SPEECH: Adjective
+USAGE: The gormless clerk stared blankly at the computer for ten minutes before realising it wasn't plugged in.
 
-DEFINITION: Requiring great care, precision, or attention to detail; delicate or sensitive.
-PART_OF_SPEECH: adjective
-USAGE: The old printer is finicky and only works if the paper is loaded exactly right.
+DEFINITION: Lacking awareness or alertness; vacant and clueless in manner or expression
+PART_OF_SPEECH: Adjective
+USAGE: She gave a gormless shrug when asked why she had forgotten the meeting for the third week running.
 
-SYNONYMS: fussy, fastidious, picky, meticulous, persnickety
+SYNONYMS: dim-witted, dopey, vacant, witless, clueless
 
-ETYMOLOGY: Of uncertain origin, first appearing in American English in the mid-19th century. It may be related to the earlier word “finical,” from Middle English “finical” meaning "over-refined," possibly derived from “fine,” from Old French “fin” (delicate, fine) and ultimately from Latin “finis” (end, limit, boundary).
+ETYMOLOGY: From dialectal English "gaum," meaning understanding, heed, or attention — itself derived from Old Norse "gaumr," meaning care or heed. The suffix "-less" comes from Old English "-lēas," meaning without. Together, "gormless" literally means "without gaum" — that is, without sense or awareness.
 
-ADDITIONAL_ETYMOLOGY: The adjective “finicky” is recorded from around the 1840s in the United States, suggesting an American English formation. Linguists often connect it to “finical,” which appeared in Middle English and carried the sense of being excessively particular or affected in refinement.
+ADDITIONAL_ETYMOLOGY: The word's journey begins in Old Norse, where "gaumr" carried the sense of attention, notice, and careful regard. This term passed into Northern and Midland dialects of Middle English as "gaum" (also spelled "gorm"), where it retained the meaning of understanding or heed — as in "to take gaum of" something, meaning to pay it notice.
 
-“Finical” likely developed from the adjective “fine,” which entered English from Old French “fin,” meaning “delicate” or “refined,” itself from Latin “finis,” meaning “end” or “limit.” The semantic shift may reflect the idea of something brought to a fine point or extreme limit of detail.
+The positive form "gaum" or "gorm" was once in common dialectal use across the north of England and Scotland, but gradually fell out of standard usage while its negation — "gormless" — survived and eventually spread into broader British English during the 19th century.
 
-The suffix “-icky” in “finicky” resembles expressive or diminutive formations in English, possibly influenced by playful or emphatic patterns in American English. Although its exact pathway remains uncertain, the word’s development reflects a blend of Middle English and Old French influence, with deeper roots in Latin.
+The "-less" suffix attaches to Old English "-lēas," a highly productive Germanic suffix meaning "devoid of" or "free from," seen also in words like "reckless," "feckless," and "hapless." Interestingly, "feckless" followed a strikingly similar path: "feck" (from "effect") was once a living dialectal word in Scots English before fading, leaving only its negative form behind.
+
+"Gormless" is recorded in print from the mid-19th century and remains chiefly British in usage, carrying a tone that is more affectionately exasperated than truly cruel — the gormless person is less malicious than simply, hopelessly oblivious.
