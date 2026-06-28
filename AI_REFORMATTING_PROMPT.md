@@ -1,4 +1,4 @@
-I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **Gormless**.
+I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **Ornery**.
 
 ### Required Format Specifications:
 
@@ -17,6 +17,8 @@ USAGE: [example sentence]
 
 SYNONYMS: [comma-separated list]
 
+WORD_FORMS: [comma-separated list, each optionally tagged with part of speech in parentheses]
+
 ETYMOLOGY: [primary etymology paragraph]
 
 ADDITIONAL_ETYMOLOGY: [detailed etymology with multiple paragraphs if needed]
@@ -29,15 +31,16 @@ ADDITIONAL_ETYMOLOGY: [detailed etymology with multiple paragraphs if needed]
 3. **Part of Speech**: Label each definition (noun, verb, adjective, adverb, etc.)
 4. **Usage Examples**: Provide realistic, natural example sentences for each definition. Write them as plain text — **do not wrap them in quotation marks**; the renderer wraps them automatically.
 5. **Synonyms**: Include 3–5 relevant synonyms as a comma-separated list
-6. **Etymology**:
+6. **Word Forms** *(optional)*: Include 2–6 related grammatical forms of the word — other parts of speech derived from the same root (e.g. for "magnanimous": "magnanimously (adv.)", "magnanimity (n.)"). Each item is `form (label)`, comma-separated; the parenthetical label is optional. These render as small outlined chips below Synonyms, visually distinct from the coloured language-origin badges. Omit the field entirely if the word has no notable related forms.
+7. **Etymology**:
    - Primary etymology paragraph explaining the word's origin
    - Additional etymology with deeper historical context, development over time, and interesting linguistic details
    - **IMPORTANT**: Mention origin languages explicitly (e.g., "from Latin", "Greek origin", "Old French") as the program automatically detects these and creates coloured language badges
 
-7. **Language Origin Badges**: The program automatically detects and displays coloured badge pills (white text on a coloured background) for languages mentioned in the etymology, including:
+8. **Language Origin Badges**: The program automatically detects and displays coloured badge pills (white text on a coloured background) for languages mentioned in the etymology, including:
    - Latin, Greek, Old English, Middle English, French, German, Sanskrit, Arabic, Hebrew, Italian, Spanish, Dutch, Norse, Celtic, Persian, Portuguese, and more
 
-8. **No Antonyms**: Do not include an ANTONYMS field (this feature has been removed)
+9. **No Antonyms**: Do not include an ANTONYMS field (this feature has been removed)
 
 **Additional Context — Layout:**
 - The output is rendered as a professional **two-column image**:
@@ -64,7 +67,7 @@ Plain Latin text — including romanised transliterations — does **not** need 
 ## Quick Reference Template
 
 ```
-WORD: example
+WORD: Example
 PRONUNCIATION: ɪɡˈzæmpəl
 
 DEFINITION: A thing characteristic of its kind or illustrating a general rule
@@ -72,6 +75,8 @@ PART_OF_SPEECH: Noun
 USAGE: This painting is a perfect example of the Impressionist style.
 
 SYNONYMS: instance, case, illustration, specimen, sample
+
+WORD_FORMS: exemplify (v.), exemplary (adj.), exemplification (n.)
 
 ETYMOLOGY: From Old French "example," from Latin "exemplum" meaning "a sample"
 
@@ -91,3 +96,4 @@ The verb form developed in the 15th century and fell out of common use, though i
 5. **Verify IPA**: Double-check pronunciation symbols for accuracy
 6. **Non-Latin Script**: Use `<noto>…</noto>` tags around Greek, Arabic, Hebrew, Cyrillic, and similar characters so they render with the correct Unicode font; transliterated text in plain Latin letters does not need tags
 7. **Don't Add Quotes Around Usage**: The renderer automatically wraps usage examples in `"…"` — if you add them yourself, they will be double-quoted in the output
+8. **Word Forms Are Optional**: Only include `WORD_FORMS` when the word has genuinely useful derived forms worth showing; skip the field for words without notable variants rather than padding it out

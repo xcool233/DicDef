@@ -2,6 +2,7 @@
 Dictionary data structures and parsing functionality.
 """
 
+import re
 from typing import Any
 
 
@@ -16,6 +17,7 @@ class DictionaryData:
         self.etymology: str = ""
         self.additional_etymology: str = ""
         self.origin_languages: list[str] = []  # New: detected origin languages
+        self.word_forms: list[dict[str, str]] = []  # New: related grammatical forms
     
     def get_combined_etymology(self) -> str:
         """Combine etymology and additional etymology into one field."""
@@ -65,7 +67,8 @@ class DictionaryData:
             "definitions": self.definitions,
             "synonyms": self.synonyms,
             "etymology": self.get_combined_etymology(),
-            "origin_languages": self.origin_languages
+            "origin_languages": self.origin_languages,
+            "word_forms": self.word_forms
         }
     
     @classmethod
@@ -77,6 +80,7 @@ class DictionaryData:
         instance.definitions = data.get("definitions", [])
         instance.synonyms = data.get("synonyms", [])
         instance.origin_languages = data.get("origin_languages", [])
+        instance.word_forms = data.get("word_forms", [])
         # Handle combined etymology or separate fields
         if "etymology" in data and isinstance(data["etymology"], str):
             instance.etymology = data["etymology"]
@@ -84,6 +88,35 @@ class DictionaryData:
             instance.etymology = data.get("etymology", "")
             instance.additional_etymology = data.get("additional_etymology", "")
         return instance
+
+
+def _parse_word_forms(forms_text: str) -> list[dict[str, str]]:
+    """
+    Parse a WORD_FORMS line into structured entries.
+
+    Accepts comma-separated items, each optionally tagged with a
+    part-of-speech in parentheses, e.g.:
+
+        "snobby (adj.), snobbery (n.), snobbishly (adv.)"
+
+    The parenthetical is optional — "snobby, snobbery" also works,
+    just without a part-of-speech label on the chip.
+    """
+    forms: list[dict[str, str]] = []
+    if not forms_text:
+        return forms
+
+    pattern = re.compile(r'^(.*?)\s*\(([^()]+)\)\s*$')
+    for item in forms_text.split(','):
+        item = item.strip()
+        if not item:
+            continue
+        match = pattern.match(item)
+        if match:
+            forms.append({"form": match.group(1).strip(), "label": match.group(2).strip()})
+        else:
+            forms.append({"form": item, "label": ""})
+    return forms
 
 
 def parse_txt_file(file_path: str) -> DictionaryData:
@@ -145,6 +178,13 @@ def parse_txt_file(file_path: str) -> DictionaryData:
             synonyms_text: str = line[9:].strip()
             if synonyms_text:
                 data.synonyms = [s.strip() for s in synonyms_text.split(',') if s.strip()]
+            current_field = None
+        elif line.startswith("WORD_FORMS:"):
+            if current_field == "ADDITIONAL_ETYMOLOGY":
+                data.additional_etymology = '\n'.join(field_content).strip()
+                field_content = []
+            forms_text: str = line[11:].strip()
+            data.word_forms = _parse_word_forms(forms_text)
             current_field = None
         elif line.startswith("ETYMOLOGY:"):
             if current_field == "ADDITIONAL_ETYMOLOGY":
