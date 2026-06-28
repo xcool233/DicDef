@@ -1,22 +1,24 @@
-WORD: Gormless
-PRONUNCIATION: ˈɡɔːmləs
+WORD: Ornery
+PRONUNCIATION: ˈɔːrnəri
 
-DEFINITION: Lacking intelligence, sense, or initiative; foolish and dim-witted
+DEFINITION: Having an irritable disposition; bad-tempered, stubborn, and difficult to deal with
 PART_OF_SPEECH: Adjective
-USAGE: The gormless clerk stared blankly at the computer for ten minutes before realising it wasn't plugged in.
+USAGE: The old mule was too ornery to budge no matter how hard they pulled on the rope.
 
-DEFINITION: Lacking awareness or alertness; vacant and clueless in manner or expression
+DEFINITION: Mischievous or playfully troublesome, especially in children or animals
 PART_OF_SPEECH: Adjective
-USAGE: She gave a gormless shrug when asked why she had forgotten the meeting for the third week running.
+USAGE: Her grandson gave her an ornery little grin before hiding her car keys again.
 
-SYNONYMS: dim-witted, dopey, vacant, witless, clueless
+SYNONYMS: cantankerous, cranky, crotchety, contrary, irritable
 
-ETYMOLOGY: From dialectal English "gaum," meaning understanding, heed, or attention — itself derived from Old Norse "gaumr," meaning care or heed. The suffix "-less" comes from Old English "-lēas," meaning without. Together, "gormless" literally means "without gaum" — that is, without sense or awareness.
+WORD_FORMS: orneriness (n.), ornerily (adv.)
 
-ADDITIONAL_ETYMOLOGY: The word's journey begins in Old Norse, where "gaumr" carried the sense of attention, notice, and careful regard. This term passed into Northern and Midland dialects of Middle English as "gaum" (also spelled "gorm"), where it retained the meaning of understanding or heed — as in "to take gaum of" something, meaning to pay it notice.
+ETYMOLOGY: Ornery emerged in early 19th-century American English as a dialectal, slurred pronunciation of ordinary. The word ordinary itself comes from Old French ordinarie, from Latin ordinarius, meaning "orderly, regular, customary," ultimately rooted in ordo, meaning "row, rank, series, order."
 
-The positive form "gaum" or "gorm" was once in common dialectal use across the north of England and Scotland, but gradually fell out of standard usage while its negation — "gormless" — survived and eventually spread into broader British English during the 19th century.
+ADDITIONAL_ETYMOLOGY: When American speakers, particularly in the South and Appalachia, contracted "ordinary" into something closer to "ornary" or "ornery," they were following a broader pattern of vowel reduction common to many regional dialects. At first the word simply meant "common" or "of inferior quality," echoing its Latin ancestor's sense of the unremarkable and customary. Calling something "ornery" in the early 1800s was much like calling it "plain" or "run-of-the-mill" today.
 
-The "-less" suffix attaches to Old English "-lēas," a highly productive Germanic suffix meaning "devoid of" or "free from," seen also in words like "reckless," "feckless," and "hapless." Interestingly, "feckless" followed a strikingly similar path: "feck" (from "effect") was once a living dialectal word in Scots English before fading, leaving only its negative form behind.
+Because this pronunciation was strongly associated with rural and less formally educated speakers, the word began to pick up a faint sneer. Through the 19th century its meaning drifted from merely "common" toward "inferior" and "unrefined," and from there toward "ill-tempered" and "cantankerous" — the dominant sense by the time Mark Twain put it in the mouths of his Mississippi River characters. Twain's frequent use of the word in "Adventures of Huckleberry Finn" helped cement it in the American vernacular.
 
-"Gormless" is recorded in print from the mid-19th century and remains chiefly British in usage, carrying a tone that is more affectionately exasperated than truly cruel — the gormless person is less malicious than simply, hopelessly oblivious.
+In the 20th century, the word softened again in a different direction. Applied to children, pets, and elderly relatives, "ornery" took on an affectionate, almost admiring tone — describing someone whose stubbornness or mischief is more charming than threatening, not unlike how "curmudgeon" lost its bite over time. This split has left "ornery" with two living senses: one genuinely cantankerous, the other gently teasing.
+
+The deeper root, Latin ordo ("order, row, rank"), also gave English words like order, ordinal, and ordinance — making "ornery" a surprisingly distant cousin of words associated with neatness and regularity, a fact that delights etymologists given how far the word's meaning has wandered from its orderly origins.

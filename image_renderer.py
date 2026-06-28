@@ -279,6 +279,140 @@ class ImageRenderer:
 
         return current_y + badge_height + (badge_spacing * 2)
 
+    def draw_word_form_chips(self, draw: Any, word_forms: list[dict[str, str]],
+                             x: float, y: float, max_width: float) -> float:
+        """
+        Draw related word-form chips (e.g. snobby (adj.), snobbery (n.)).
+
+        Visually these are deliberately *not* colour-filled like the
+        language-origin badges — they use an outlined/neutral style so the
+        two badge types are easy to tell apart at a glance.
+        """
+        if not word_forms:
+            return y
+
+        padding_x = 10
+        padding_y = 4
+        chip_spacing = 8
+        current_x = x
+        current_y = y
+
+        font = self.generator.font_small
+        sample_bbox = font.getbbox("Ag")
+        font_height = sample_bbox[3] - sample_bbox[1]
+        chip_height = font_height + (padding_y * 2)
+
+        for entry in word_forms:
+            form = entry.get("form", "")
+            label = entry.get("label", "")
+            if not form:
+                continue
+            chip_text = f"{form} ({label})" if label else form
+
+            text_bbox = font.getbbox(chip_text)
+            text_width = text_bbox[2] - text_bbox[0]
+            chip_width = text_width + (2 * padding_x)
+
+            if current_x + chip_width > x + max_width and current_x > x:
+                current_x = x
+                current_y += chip_height + chip_spacing
+
+            draw.rounded_rectangle(
+                [(current_x, current_y),
+                 (current_x + chip_width, current_y + chip_height)],
+                radius=4,
+                outline=self.generator.secondary_color,
+                width=1,
+            )
+
+            text_x = current_x + padding_x - text_bbox[0]
+            text_y = current_y + padding_y - text_bbox[1]
+            draw.text((text_x, text_y), chip_text,
+                      font=font, fill=self.generator.secondary_color)
+
+            current_x += chip_width + chip_spacing
+
+        return current_y + chip_height + (chip_spacing * 2)
+
+    # ------------------------------------------------------------------
+    # Etymology flow helpers (used for multi-column overflow)
+    # ------------------------------------------------------------------
+
+    def _etymology_flow_items(self, data: DictionaryData,
+                              col_width: float) -> list[tuple[str, float, bool]]:
+        """
+        Pre-compute the etymology block as a flat list of drawable lines.
+
+        Returns a list of (line_text, height, is_heading) tuples, in draw
+        order, already wrapped for *col_width*. "is_heading" marks the
+        "Etymology & Additional Etymology:" label line. Paragraph-break
+        spacing is folded in as a preceding blank entry with empty text
+        and the gap as its height — callers should still draw nothing for
+        empty text, just advance y by its height.
+        """
+        items: list[tuple[str, float, bool]] = []
+        combined_etymology = data.get_combined_etymology()
+        if not combined_etymology:
+            return items
+
+        lh_small = self.line_height(self.generator.font_small)
+        lh_main = self.line_height(self.generator.font_main)
+        ss = self.generator.section_spacing
+
+        label = "Etymology & Additional Etymology:"
+        items.append((label, lh_small, True))
+
+        paragraphs = (combined_etymology.split('\n\n')
+                      if '\n\n' in combined_etymology
+                      else combined_etymology.split('\n'))
+        # Filter blank paragraphs up front so spacing logic matches draw_text_block
+        paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+        for i, paragraph in enumerate(paragraphs):
+            for line in self.wrap_text(paragraph, self.generator.font_main, col_width - 20):
+                items.append((line, lh_main, False))
+            if i < len(paragraphs) - 1:
+                items.append(("", ss * 0.5, False))
+
+        return items
+
+    def _flow_into_columns(self, items: list[tuple[str, float, bool]],
+                           target_height: float) -> list[list[tuple[str, float, bool]]]:
+        """
+        Greedily distribute pre-measured flow *items* into as many columns
+        as needed so that no column exceeds *target_height*.
+
+        A heading line is never left stranded alone at the bottom of a
+        column — if a heading wouldn't be followed by at least one more
+        line in the same column, it's pushed to the next column instead.
+        """
+        columns: list[list[tuple[str, float, bool]]] = [[]]
+        current_height = 0.0
+
+        for idx, (text, height, is_heading) in enumerate(items):
+            # Don't start a new column with a paragraph-break spacer.
+            if not text and current_height == 0.0:
+                continue
+
+            # Avoid stranding a heading as the last line of a column.
+            if is_heading and current_height + height >= target_height and current_height > 0:
+                columns.append([])
+                current_height = 0.0
+
+            if current_height + height > target_height and current_height > 0:
+                columns.append([])
+                current_height = 0.0
+                if not text:
+                    continue
+
+            columns[-1].append((text, height, is_heading))
+            current_height += height
+
+        return columns
+
+    def _measure_flow_height(self, items: list[tuple[str, float, bool]]) -> float:
+        return sum(h for _, h, _ in items)
+
     # ------------------------------------------------------------------
     # Column height estimation
     # ------------------------------------------------------------------
@@ -327,6 +461,16 @@ class ImageRenderer:
                                        self.generator.font_main, left_col_width - 10)
             left_height += len(syn_lines) * lh_main
             left_height += ss
+
+        if data.word_forms:
+            left_height += lh_small
+            sample_bbox = self.generator.font_small.getbbox("Ag")
+            chip_h = (sample_bbox[3] - sample_bbox[1]) + 8
+            chip_spacing = 8
+            # Rough estimate: assume ~2 chips per row at this column width.
+            estimated_rows = max(1, (len(data.word_forms) + 1) // 2)
+            left_height += estimated_rows * (chip_h + chip_spacing)
+            left_height += ss * 0.3
 
         # ── Right column ─────────────────────────────────────────────
         right_height: float = 0
@@ -423,6 +567,39 @@ class ImageRenderer:
 
             current_y += self.generator.section_spacing
 
+        # Word forms (related grammatical forms, e.g. snobby (adj.))
+        if data.word_forms:
+            bb = self.generator.font_small.getbbox("Word Forms:")
+            draw.text((x, current_y - bb[1]), "Word Forms:",
+                      font=self.generator.font_small,
+                      fill=self.generator.accent_color)
+            current_y += self.line_height(self.generator.font_small)
+
+            current_y = self.draw_word_form_chips(draw, data.word_forms,
+                                                   x, current_y, col_width)
+
+            current_y += self.generator.section_spacing * 0.3
+
+        return current_y
+
+    def render_etymology_column(self, draw: Any, column_items: list[tuple[str, float, bool]],
+                                x: float, y: float) -> float:
+        """Draw one column's worth of pre-flowed etymology lines."""
+        current_y = y
+        for text, height, is_heading in column_items:
+            if not text:
+                current_y += height
+                continue
+            if is_heading:
+                bb = self.generator.font_small.getbbox(text)
+                draw.text((x, current_y - bb[1]), text,
+                          font=self.generator.font_small,
+                          fill=self.generator.accent_color)
+            else:
+                bb = self.generator.font_main.getbbox(strip_tags(text) or "A")
+                self._draw_span_text(draw, x, current_y - bb[1], text,
+                                     self.generator.font_main, self.generator.text_color)
+            current_y += height
         return current_y
 
     def render_right_column(self, draw: Any, data: DictionaryData,
@@ -452,33 +629,109 @@ class ImageRenderer:
     # ------------------------------------------------------------------
 
     def create_image(self, data: DictionaryData, width: int = 1400,
-                     output_path: str = "dictionary_definition.png") -> Image.Image:
-        col_gap: float         = 50
-        left_col_width: float  = (width - (2 * self.generator.margin) - col_gap) * 0.45
-        right_col_width: float = (width - (2 * self.generator.margin) - col_gap) * 0.55
+                     output_path: str = "dictionary_definition.png",
+                     max_height_give: float = 0.35,
+                     max_etymology_columns: int = 4) -> Image.Image:
+        """
+        Render the dictionary entry.
 
-        left_height, right_height = self.calculate_column_heights(
-            data, left_col_width, right_col_width)
+        The image height is capped to roughly the left column's height
+        (plus *max_height_give* as a fraction of that height, so a column
+        can finish a paragraph without being forced to split awkwardly).
+        If the etymology text would overflow that height in a single
+        right-hand column, it is reflowed across additional columns of
+        the same width — growing the image *wider* instead of taller —
+        up to *max_etymology_columns*.
+        """
+        col_gap: float = 50
+        margin = self.generator.margin
 
-        total_height = max(left_height, right_height) + (2 * self.generator.margin) + 20
+        left_col_width: float = (width - (2 * margin) - col_gap) * 0.45
+        etym_col_width: float = (width - (2 * margin) - col_gap) * 0.55
 
-        image = Image.new("RGB", (width, int(total_height)), self.generator.bg_color)
-        draw  = ImageDraw.Draw(image)
+        left_height, _ = self.calculate_column_heights(data, left_col_width, etym_col_width)
 
-        left_x  = self.generator.margin
-        right_x = self.generator.margin + left_col_width + col_gap
-        start_y = self.generator.margin
+        # Target height for the whole image: left column's natural height,
+        # with some give so a column doesn't cut a paragraph off mid-thought.
+        target_height = left_height * (1 + max_height_give)
 
-        self.render_left_column(draw,  data, left_x,  start_y, left_col_width)
-        self.render_right_column(draw, data, right_x, start_y, right_col_width)
+        # Flow the etymology text at the standard column width and see how
+        # many columns (at that width) are needed to fit inside target_height.
+        etym_items = self._etymology_flow_items(data, etym_col_width)
 
-        divider_x = int(left_x + left_col_width + (col_gap / 2))
-        draw.line(
-            [(divider_x, start_y), (divider_x, int(total_height - self.generator.margin))],
-            fill=self.generator.divider_color, width=2)
+        num_etym_cols = 1
+        columns: list[list[tuple[str, float, bool]]] = [etym_items]
+        if etym_items:
+            total_etym_height = self._measure_flow_height(etym_items)
+            # Greedy packing at target_height tells us the minimum column
+            # count needed; cap it at max_etymology_columns.
+            greedy_columns = self._flow_into_columns(etym_items, target_height)
+            num_etym_cols = min(max(len(greedy_columns), 1), max_etymology_columns)
+
+            # Re-balance evenly across exactly num_etym_cols columns so the
+            # last column isn't left mostly empty — pack each column to
+            # total_height / num_etym_cols rather than the looser
+            # give-adjusted target used just to pick the count.
+            balanced_target = max(total_etym_height / num_etym_cols, 1.0)
+            columns = self._flow_into_columns(etym_items, balanced_target)
+
+            # Rounding in the balance pass can occasionally produce one
+            # extra column — if so, merge the overflow into the last
+            # allowed column rather than exceeding the cap.
+            if len(columns) > num_etym_cols:
+                merged = columns[:num_etym_cols - 1]
+                tail: list[tuple[str, float, bool]] = []
+                for col in columns[num_etym_cols - 1:]:
+                    tail.extend(col)
+                merged.append(tail)
+                columns = merged
+
+        # Actual right-hand block height = tallest etymology column.
+        right_height = max((self._measure_flow_height(c) for c in columns), default=0.0)
+
+        total_height = max(left_height, right_height) + (2 * margin) + 20
+
+        # Total width grows with extra etymology columns.
+        total_width = (
+            margin + left_col_width + col_gap
+            + (num_etym_cols * etym_col_width)
+            + ((num_etym_cols - 1) * col_gap)
+            + margin
+        )
+        total_width = max(total_width, width)
+
+        image = Image.new("RGB", (int(total_width), int(total_height)), self.generator.bg_color)
+        draw = ImageDraw.Draw(image)
+
+        left_x = margin
+        start_y = margin
+
+        self.render_left_column(draw, data, left_x, start_y, left_col_width)
+
+        # Render each etymology column, with a divider before each one
+        # (including the one separating it from the left column).
+        col_x = left_x + left_col_width + col_gap
+        for column_items in columns:
+            divider_x = int(col_x - (col_gap / 2))
+            draw.line(
+                [(divider_x, start_y), (divider_x, int(total_height - margin))],
+                fill=self.generator.divider_color, width=2)
+
+            self.render_etymology_column(draw, column_items, col_x, start_y)
+            col_x += etym_col_width + col_gap
+
+        # If there was no etymology at all, still draw the single divider
+        # between left column and the (empty) right space.
+        if not columns or not etym_items:
+            divider_x = int(left_x + left_col_width + (col_gap / 2))
+            draw.line(
+                [(divider_x, start_y), (divider_x, int(total_height - margin))],
+                fill=self.generator.divider_color, width=2)
 
         image.save(output_path, "PNG", quality=95)
         print(f"Dictionary definition image saved as: {output_path}")
+        print(f"[layout] left_height={left_height:.0f} target_height={target_height:.0f} "
+              f"etym_columns={num_etym_cols} final_size={int(total_width)}x{int(total_height)}")
         return image
 
 
