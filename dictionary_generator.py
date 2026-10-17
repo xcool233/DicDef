@@ -6,7 +6,7 @@ from typing import Any, TypeAlias
 
 from PIL import Image
 from load_fonts import load_fonts
-from theme_config import ThemeConfig, ColorScheme, LayoutConfig
+from theme_config import ThemeConfig, ColorScheme, LayoutConfig, PaletteSpec
 from image_renderer import ImageRenderer
 from dictionary_data import DictionaryData, parse_txt_file
 
@@ -16,7 +16,8 @@ class DictionaryImageGenerator:
     
     def __init__(self, dark_mode: bool = True, random_theme: bool = False, 
                 theme_seed: int | None = None, font_path: str | None = None, 
-                ipa_font_path: str | None = None, font_size: int = 24) -> None:
+                ipa_font_path: str | None = None, font_size: int = 24,
+                palette: PaletteSpec | None = None) -> None:
         """
         Initialize dictionary image generator.
         
@@ -27,6 +28,8 @@ class DictionaryImageGenerator:
             font_path: Custom font file path for main text (default: None)
             ipa_font_path: Custom font file path for IPA pronunciation (default: None)
             font_size: Base font size in pixels (default: 24)
+            palette: Primary/secondary/tertiary colours + harmony mode (default: None).
+                     Takes priority over random_theme.
         """
         self.dark_mode: bool = dark_mode
         self.random_theme: bool = random_theme
@@ -37,13 +40,16 @@ class DictionaryImageGenerator:
         color_scheme: ColorScheme = ThemeConfig.get_theme(
             dark_mode=dark_mode,
             random_theme=random_theme,
-            seed=theme_seed
+            seed=theme_seed,
+            palette=palette
         )
         self.bg_color: str = color_scheme.bg_color
         self.text_color: str = color_scheme.text_color
         self.accent_color: str = color_scheme.accent_color
         self.secondary_color: str = color_scheme.secondary_color
         self.divider_color: str = color_scheme.divider_color
+        self.tertiary_color: str = color_scheme.tertiary_color
+        self.palette: PaletteSpec | None = palette
         
         # Apply layout
         layout: LayoutConfig = ThemeConfig.get_layout()

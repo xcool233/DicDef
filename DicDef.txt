@@ -1,24 +1,29 @@
-WORD: Ornery
-PRONUNCIATION: ˈɔːrnəri
+WORD: Sinister
+PRONUNCIATION: ˈsɪnɪstər
 
-DEFINITION: Having an irritable disposition; bad-tempered, stubborn, and difficult to deal with
+PALETTE_HARMONY: analogous
+PALETTE_PRIMARY: #8b1a1a
+
+DEFINITION: Giving the impression that something harmful, evil, or threatening is about to happen; suggestive of malevolent intent
 PART_OF_SPEECH: Adjective
-USAGE: The old mule was too ornery to budge no matter how hard they pulled on the rope.
+USAGE: A sinister silence settled over the house as the lights flickered and went out one by one.
 
-DEFINITION: Mischievous or playfully troublesome, especially in children or animals
+DEFINITION: Pertaining to, or situated on, the left side; in heraldry, the side of a shield to the bearer's left (the viewer's right)
 PART_OF_SPEECH: Adjective
-USAGE: Her grandson gave her an ornery little grin before hiding her car keys again.
+USAGE: The coat of arms showed a lion on the sinister side of the shield, facing away from the centre.
 
-SYNONYMS: cantankerous, cranky, crotchety, contrary, irritable
+DEFINITION: Foreboding misfortune; regarded as ill-omened or unlucky
+PART_OF_SPEECH: Adjective
+USAGE: The villagers saw the crows gathering on the rooftops as a sinister sign of the hard winter ahead.
 
-WORD_FORMS: orneriness (n.), ornerily (adv.)
+SYNONYMS: menacing, ominous, malevolent, threatening, baleful
 
-ETYMOLOGY: Ornery emerged in early 19th-century American English as a dialectal, slurred pronunciation of ordinary. The word ordinary itself comes from Old French ordinarie, from Latin ordinarius, meaning "orderly, regular, customary," ultimately rooted in ordo, meaning "row, rank, series, order."
+WORD_FORMS: sinisterly (adv.), sinisterness (n.), sinistral (adj.), sinistrous (adj.)
 
-ADDITIONAL_ETYMOLOGY: When American speakers, particularly in the South and Appalachia, contracted "ordinary" into something closer to "ornary" or "ornery," they were following a broader pattern of vowel reduction common to many regional dialects. At first the word simply meant "common" or "of inferior quality," echoing its Latin ancestor's sense of the unremarkable and customary. Calling something "ornery" in the early 1800s was much like calling it "plain" or "run-of-the-mill" today.
+ETYMOLOGY: From Old French <i>sinistre</i>, from Latin <i>sinister</i>, meaning "left" or "on the left side," and by extension "unlucky" or "inauspicious." The ultimate origin of the Latin word is uncertain.
 
-Because this pronunciation was strongly associated with rural and less formally educated speakers, the word began to pick up a faint sneer. Through the 19th century its meaning drifted from merely "common" toward "inferior" and "unrefined," and from there toward "ill-tempered" and "cantankerous" — the dominant sense by the time Mark Twain put it in the mouths of his Mississippi River characters. Twain's frequent use of the word in "Adventures of Huckleberry Finn" helped cement it in the American vernacular.
+ADDITIONAL_ETYMOLOGY: The Latin <i>sinister</i> originally meant simply "left," as opposed to <i>dexter</i>, "right." Its sense of misfortune arose from the way Roman augurs interpreted omens. Roman priests, facing south, took signs from the east (their left) as favourable, so <i>sinister</i> could mean "auspicious" in Latin. Greek augural practice, however, treated the left as the unlucky side, and this view, combined with the widespread cultural prejudice against left-handedness, eventually dominated. The Greek word <noto><i>ἀριστερός</i></noto> (aristeros), "left," was itself a euphemism, literally "the better one," used to avoid naming the unlucky side directly.
 
-In the 20th century, the word softened again in a different direction. Applied to children, pets, and elderly relatives, "ornery" took on an affectionate, almost admiring tone — describing someone whose stubbornness or mischief is more charming than threatening, not unlike how "curmudgeon" lost its bite over time. This split has left "ornery" with two living senses: one genuinely cantankerous, the other gently teasing.
+The word entered Middle English in the 15th century through Old French, carrying both the literal sense of "left" and the figurative senses of "unfavourable" and "unlucky." By the 16th century the sense of "evil" or "malevolent" had taken firm hold, as in the idea of a sinister motive or design. The literal sense survives in heraldry, where the sinister side of a shield is the bearer's left. The related phrase <i>bend sinister</i> is a diagonal band running from the shield's upper right to lower left, which was popularly (though inaccurately) associated with illegitimacy.
 
-The deeper root, Latin ordo ("order, row, rank"), also gave English words like order, ordinal, and ordinance — making "ornery" a surprisingly distant cousin of words associated with neatness and regularity, a fact that delights etymologists given how far the word's meaning has wandered from its orderly origins.
+The same root gave Italian <i>sinistra</i> and Spanish <i>siniestro</i>, both of which retain the sense of "left" alongside "ominous." English <i>sinistral</i>, meaning "left-handed" or "coiling to the left" (as in certain snail shells), is a modern scientific borrowing from the same Latin source.

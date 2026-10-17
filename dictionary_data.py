@@ -18,6 +18,11 @@ class DictionaryData:
         self.additional_etymology: str = ""
         self.origin_languages: list[str] = []  # New: detected origin languages
         self.word_forms: list[dict[str, str]] = []  # New: related grammatical forms
+        # Optional AI-supplied colour palette (raw strings; validated in theme_config.PaletteSpec)
+        self.palette_primary: str = ""
+        self.palette_harmony: str = ""
+        self.palette_secondary: str = ""
+        self.palette_tertiary: str = ""
     
     def get_combined_etymology(self) -> str:
         """Combine etymology and additional etymology into one field."""
@@ -68,7 +73,11 @@ class DictionaryData:
             "synonyms": self.synonyms,
             "etymology": self.get_combined_etymology(),
             "origin_languages": self.origin_languages,
-            "word_forms": self.word_forms
+            "word_forms": self.word_forms,
+            "palette_primary": self.palette_primary,
+            "palette_harmony": self.palette_harmony,
+            "palette_secondary": self.palette_secondary,
+            "palette_tertiary": self.palette_tertiary,
         }
     
     @classmethod
@@ -81,6 +90,10 @@ class DictionaryData:
         instance.synonyms = data.get("synonyms", [])
         instance.origin_languages = data.get("origin_languages", [])
         instance.word_forms = data.get("word_forms", [])
+        instance.palette_primary = data.get("palette_primary", "")
+        instance.palette_harmony = data.get("palette_harmony", "")
+        instance.palette_secondary = data.get("palette_secondary", "")
+        instance.palette_tertiary = data.get("palette_tertiary", "")
         # Handle combined etymology or separate fields
         if "etymology" in data and isinstance(data["etymology"], str):
             instance.etymology = data["etymology"]
@@ -196,6 +209,21 @@ def parse_txt_file(file_path: str) -> DictionaryData:
             # Start collecting multi-line content
             current_field = "ADDITIONAL_ETYMOLOGY"
             field_content = [line[21:].strip()] if line[21:].strip() else []
+        elif line.startswith("PALETTE_"):
+            if current_field == "ADDITIONAL_ETYMOLOGY":
+                data.additional_etymology = '\n'.join(field_content).strip()
+                field_content = []
+            key, _, value = line.partition(":")
+            key, value = key.strip(), value.strip()
+            if key == "PALETTE_PRIMARY":
+                data.palette_primary = value
+            elif key == "PALETTE_SECONDARY":
+                data.palette_secondary = value
+            elif key == "PALETTE_TERTIARY":
+                data.palette_tertiary = value
+            elif key == "PALETTE_HARMONY":
+                data.palette_harmony = value
+            current_field = None
         elif line.startswith("NOTE:") or line.startswith("HISTORICAL_USAGE:"):
             if current_field == "ADDITIONAL_ETYMOLOGY":
                 data.additional_etymology = '\n'.join(field_content).strip()

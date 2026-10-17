@@ -4,8 +4,20 @@ Image rendering functionality for dictionary definitions with two-column layout.
 Font strategy
 -------------
 Atkinson Hyperlegible is used for all text by default.
-Wrap any text in <noto>...</noto> tags to render it with Noto Sans instead —
-useful for characters Atkinson doesn't support (Greek, Arabic, CJK, etc.).
+
+Inline text styling
+-------------------
+Wrap text in tags to style it.  Tags can be nested and combined:
+
+    <b>bold</b>   <i>italic</i>   <u>underline</u>   <s>strikethrough</s>
+    <noto>...</noto>   render with Noto Sans (Greek, Arabic, CJK, etc.)
+
+    e.g.  <b><i>bold italic</i></b>   or   <u><i>underlined italic</i></u>
+
+Aliases: <strong>=<b>, <em>=<i>, <strike>/<del>=<s>.
+
+Bold / italic use the real font files (e.g. ...-Bold.ttf, ...-Italic.ttf) when
+they sit beside the regular font; otherwise a synthetic bold / slant is applied.
 
 The IPA pronunciation line always uses the dedicated IPA font (Noto Sans).
 """
@@ -13,44 +25,66 @@ The IPA pronunciation line always uses the dedicated IPA font (Noto Sans).
 from __future__ import annotations
 
 import re
-from typing import Any, Protocol, runtime_checkable
+import subprocess
+from pathlib import Path
+from typing import Any, NamedTuple, Protocol, runtime_checkable
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from dictionary_data import DictionaryData
 
 
 # ---------------------------------------------------------------------------
-# Tag parsing  –  <noto>text</noto>  →  list of (text, use_noto) spans
+# Tag parsing  –  <b> <i> <u> <s> <noto>  →  list of styled spans
 # ---------------------------------------------------------------------------
 
-# A "span" is (text: str, noto: bool)
-Span = tuple[str, bool]
+class Span(NamedTuple):
+    """A run of text that shares one set of style flags."""
+    text: str
+    noto: bool = False
+    bold: bool = False
+    italic: bool = False
+    underline: bool = False
+    strike: bool = False
 
-_NOTO_TAG = re.compile(r'<noto>(.*?)</noto>', re.DOTALL)
+
+# tag name (case-insensitive) -> Span field it switches on/off
+_TAG_ALIASES: dict[str, str] = {
+    "noto": "noto",
+    "b": "bold", "strong": "bold",
+    "i": "italic", "em": "italic",
+    "u": "underline",
+    "s": "strike", "strike": "strike", "del": "strike",
+}
+_FLAG_FIELDS = ("noto", "bold", "italic", "underline", "strike")
+_FLAG_TAGS = ("noto", "b", "i", "u", "s")  # canonical tag per field, same order
+_TAG_RE = re.compile(r"<(/?)(" + "|".join(_TAG_ALIASES) + r")>", re.IGNORECASE)
+
+_NO_FLAGS = (False,) * len(_FLAG_FIELDS)
 
 
 def parse_spans(text: str) -> list[Span]:
     """
-    Split *text* into a list of (segment, use_noto) spans.
+    Split *text* into a list of styled spans.
 
-    Plain text → (segment, False)  →  rendered with primary font (Atkinson)
-    <noto>…</noto> → (segment, True) →  rendered with Noto fallback font
+    Opening a tag switches its style on, closing it switches it off, so tags
+    nest (and even overlap) freely.  Unknown tags are left as literal text.
     """
+    flags = dict.fromkeys(_FLAG_FIELDS, False)
     spans: list[Span] = []
     last = 0
-    for m in _NOTO_TAG.finditer(text):
+    for m in _TAG_RE.finditer(text):
         if m.start() > last:
-            spans.append((text[last:m.start()], False))
-        spans.append((m.group(1), True))
+            spans.append(Span(text[last:m.start()], **flags))
+        flags[_TAG_ALIASES[m.group(2).lower()]] = not m.group(1)
         last = m.end()
     if last < len(text):
-        spans.append((text[last:], False))
-    return spans or [(text, False)]
+        spans.append(Span(text[last:], **flags))
+    return spans or [Span(text)]
 
 
 def strip_tags(text: str) -> str:
-    """Remove all <noto>…</noto> tags, returning plain text (for width measurement)."""
-    return _NOTO_TAG.sub(r'\1', text)
+    """Remove all style tags, returning plain text (for width measurement)."""
+    return _TAG_RE.sub("", text)
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +144,10 @@ class ImageRenderer:
 
     def __init__(self, generator: GeneratorProtocol) -> None:
         self.generator = generator
+        # (font path, size, bold, italic) -> (font, synthetic_bold, synthetic_italic)
+        self._variant_cache: dict[tuple, tuple[Any, bool, bool]] = {}
+        # Set by create_image(); needed to paste synthetic-italic glyphs
+        self._image: Image.Image | None = None
 
     # ------------------------------------------------------------------
     # Font resolution helpers
@@ -129,9 +167,69 @@ class ImageRenderer:
         # font_main or anything else
         return getattr(g, "font_fallback_main", None) or font
 
-    def _font_for_span(self, font: Any, noto: bool) -> Any:
-        """Return the correct PIL font for a span."""
-        return self._fallback_for(font) if noto else font
+    def _resolve_font(self, font: Any, span: Span) -> tuple[Any, bool, bool]:
+        """
+        Pick the PIL font for *span*.
+
+        Returns (font, synthetic_bold, synthetic_italic).  The synthetic flags
+        are True only when no real bold/italic font file could be found.
+        """
+        base = self._fallback_for(font) if span.noto else font
+        if not (span.bold or span.italic):
+            return base, False, False
+
+        path = getattr(base, "path", None)
+        size = getattr(base, "size", None)
+        if path is None or size is None:
+            return base, span.bold, span.italic
+
+        key = (str(path), size, span.bold, span.italic)
+        if key not in self._variant_cache:
+            self._variant_cache[key] = self._load_variant(
+                base, str(path), size, span.bold, span.italic)
+        return self._variant_cache[key]
+
+    @staticmethod
+    def _load_variant(base: Any, path: str, size: int,
+                      bold: bool, italic: bool) -> tuple[Any, bool, bool]:
+        exact = _find_variant(base, path, size, bold, italic)
+        if exact is not None:
+            return exact, False, False
+        if bold and italic:
+            # Half-real is better than fully fake.
+            f = _find_variant(base, path, size, True, False)
+            if f is not None:
+                return f, False, True
+            f = _find_variant(base, path, size, False, True)
+            if f is not None:
+                return f, True, False
+        want = " ".join(w for w, on in (("bold", bold), ("italic", italic)) if on)
+        print(f"[fonts] No real {want} file found for {Path(path).name} "
+              f"({size}px) - using synthetic styling")
+        return base, bold, italic
+
+    @staticmethod
+    def _advance(font: Any, text: str) -> float:
+        """Horizontal advance of *text* in *font* (falls back to bbox width)."""
+        try:
+            return float(font.getlength(text))
+        except AttributeError:
+            bb = font.getbbox(text)
+            return float(bb[2] - bb[0])
+
+    def _span_advance(self, font: Any, text: str, synth_bold: bool) -> float:
+        """Advance of a span, including the extra spacing synthetic bold needs."""
+        adv = self._advance(font, text)
+        if synth_bold:
+            adv += len(text) * _synth_bold_stroke(font)
+        return adv
+
+    @staticmethod
+    def _ascent(font: Any) -> float:
+        try:
+            return float(font.getmetrics()[0])
+        except (AttributeError, TypeError):
+            return 0.0
 
     # ------------------------------------------------------------------
     # Measurement helpers (tag-aware)
@@ -139,14 +237,15 @@ class ImageRenderer:
 
     def _measure_text(self, text: str, font: Any) -> float:
         """
-        Return the pixel width of *text*, which may contain <noto> tags.
+        Return the pixel width of *text*, which may contain style tags.
         Each span is measured with its actual rendering font.
         """
         total = 0.0
-        for segment, noto in parse_spans(text):
-            f = self._font_for_span(font, noto)
-            bb = f.getbbox(segment)
-            total += bb[2] - bb[0]
+        for span in parse_spans(text):
+            if not span.text:
+                continue
+            f, synth_bold, _ = self._resolve_font(font, span)
+            total += self._span_advance(f, span.text, synth_bold)
         return total
 
     def line_height(self, font: Any) -> float:
@@ -160,57 +259,112 @@ class ImageRenderer:
 
     def wrap_text(self, text: str, font: Any, max_width: float) -> list[str]:
         """
-        Wrap *text* (which may contain <noto> tags) to fit within *max_width*.
+        Wrap *text* (which may contain style tags) to fit within *max_width*.
 
-        Tags are preserved in the returned lines so the renderer can honour them.
-        Width measurement uses the correct font for each tagged span.
+        Tags are re-emitted around every word, so each returned line is
+        self-contained and can be drawn without knowing about the others.
         """
-        # We wrap on word boundaries in the *plain* text, then reconstruct
-        # the tagged version for each line.
-        #
-        # Strategy: tokenise into words that carry their tag state, then
-        # greedily pack words onto lines exactly as before.
+        tokens = _split_into_tagged_tokens(text)
 
-        # Build a flat list of (word_with_tags, plain_word) pairs.
-        # We re-assemble tagged words by walking spans and splitting on spaces.
-        tagged_words: list[str] = _split_into_tagged_words(text)
+        def join(toks: list[tuple[str, str]]) -> str:
+            out = ""
+            for j, (word, sep) in enumerate(toks):
+                out += word
+                if j < len(toks) - 1:
+                    out += sep  # keeps underline/strike running across spaces
+            return out
 
         lines: list[str] = []
-        current: list[str] = []
+        current: list[tuple[str, str]] = []
 
-        for word in tagged_words:
-            candidate = " ".join(current + [word])
-            if self._measure_text(candidate, font) <= max_width:
-                current.append(word)
+        for token in tokens:
+            if self._measure_text(join(current + [token]), font) <= max_width:
+                current.append(token)
             else:
                 if current:
-                    lines.append(" ".join(current))
-                    current = [word]
+                    lines.append(join(current))
+                    current = [token]
                 else:
-                    lines.append(word)
+                    lines.append(token[0])
 
         if current:
-            lines.append(" ".join(current))
+            lines.append(join(current))
         return lines
 
     # ------------------------------------------------------------------
     # Drawing
     # ------------------------------------------------------------------
 
+    def _draw_segment(self, draw: Any, x: float, baseline: float, text: str,
+                      font: Any, fill: str, synth_bold: bool,
+                      synth_italic: bool) -> None:
+        """Draw one single-style run with its baseline at *baseline*."""
+        stroke = _synth_bold_stroke(font) if synth_bold else 0
+        has_metrics = hasattr(font, "getmetrics")
+
+        if synth_bold and len(text) > 1:
+            # Space glyphs out by the stroke width so thickened letters don't touch.
+            cx = x
+            for ch in text:
+                self._draw_segment(draw, cx, baseline, ch, font, fill, True, synth_italic)
+                cx += self._advance(font, ch) + stroke
+            return
+
+        if not synth_italic or not has_metrics or self._image is None:
+            if has_metrics:
+                draw.text((x, baseline), text, font=font, fill=fill, anchor="ls",
+                          stroke_width=stroke, stroke_fill=fill)
+            else:
+                draw.text((x, baseline - self._ascent(font)), text, font=font, fill=fill)
+            return
+
+        # Synthetic italic: draw onto a mask, shear it about the baseline,
+        # then paste the fill colour through the sheared mask.
+        shear = 0.2
+        asc, desc = font.getmetrics()
+        pad = 4 + stroke
+        width = int(self._advance(font, text)) + 2 * pad + int(shear * (asc + pad)) + 2
+        height = asc + desc + 2 * pad
+        base_y = pad + asc
+
+        mask = Image.new("L", (width, height), 0)
+        ImageDraw.Draw(mask).text((pad, base_y), text, font=font, fill=255,
+                                  anchor="ls", stroke_width=stroke, stroke_fill=255)
+        mask = mask.transform(mask.size, Image.Transform.AFFINE,
+                              (1, shear, -shear * base_y, 0, 1, 0),
+                              resample=Image.Resampling.BICUBIC)
+        self._image.paste(fill, (round(x - pad), round(baseline - base_y)), mask)
+
     def _draw_span_text(self, draw: Any, x: float, y: float,
                         text: str, font: Any, fill: str) -> float:
         """
-        Draw *text* (possibly containing <noto> tags) starting at (x, y).
+        Draw *text* (possibly containing style tags) starting at (x, y).
         *y* is the visual top of the line (bbox[1] already cancelled by caller).
+        All spans share one baseline, whatever font they use.
         Returns the new x position after drawing.
         """
-        for segment, noto in parse_spans(text):
-            f = self._font_for_span(font, noto)
-            bb = f.getbbox(segment)
-            # Cancel internal top bearing so glyphs from different fonts
-            # sit on the same visual baseline.
-            draw.text((x, y - bb[1]), segment, font=f, fill=fill)
-            x += bb[2] - bb[0]
+        ref_top = font.getbbox(strip_tags(text) or "A")[1]
+        baseline = (y - ref_top) + self._ascent(font)
+
+        for span in parse_spans(text):
+            if not span.text:
+                continue
+            f, synth_bold, synth_italic = self._resolve_font(font, span)
+            adv = self._span_advance(f, span.text, synth_bold)
+
+            self._draw_segment(draw, x, baseline, span.text, f, fill,
+                               synth_bold, synth_italic)
+
+            fsize = getattr(f, "size", 24)
+            thick = max(1, round(fsize / 16))
+            if span.underline:
+                uy = round(baseline + max(2, fsize * 0.12))
+                draw.rectangle([round(x), uy, round(x + adv) - 1, uy + thick - 1], fill=fill)
+            if span.strike:
+                sy = round(baseline - fsize * 0.28)
+                draw.rectangle([round(x), sy, round(x + adv) - 1, sy + thick - 1], fill=fill)
+
+            x += adv
         return x
 
     def draw_text_block(self, draw: Any, text: str, font: Any, color: str,
@@ -702,6 +856,7 @@ class ImageRenderer:
 
         image = Image.new("RGB", (int(total_width), int(total_height)), self.generator.bg_color)
         draw = ImageDraw.Draw(image)
+        self._image = image
 
         left_x = margin
         start_y = margin
@@ -736,55 +891,120 @@ class ImageRenderer:
 
 
 # ---------------------------------------------------------------------------
-# Internal helper – tokenise a tagged string into word-level tokens
+# Internal helper - tokenise a tagged string into word-level tokens
 # ---------------------------------------------------------------------------
 
-def _split_into_tagged_words(text: str) -> list[str]:
+def _encode_chars(chars: list[tuple[str, tuple[bool, ...]]]) -> str:
+    """Turn (char, flags) pairs back into a string with the minimum tags."""
+    out: list[str] = []
+    current = _NO_FLAGS
+    for ch, flags in chars:
+        if flags != current:
+            for tag, was, now in zip(_FLAG_TAGS, current, flags):
+                if was and not now:
+                    out.append(f"</{tag}>")
+            for tag, was, now in zip(_FLAG_TAGS, current, flags):
+                if now and not was:
+                    out.append(f"<{tag}>")
+            current = flags
+        out.append(ch)
+    for tag, was in zip(_FLAG_TAGS, current):
+        if was:
+            out.append(f"</{tag}>")
+    return "".join(out)
+
+
+def _split_into_tagged_tokens(text: str) -> list[tuple[str, str]]:
     """
-    Split *text* into a list of whitespace-delimited tokens while preserving
-    <noto>…</noto> tags around each word's content.
+    Split *text* into (word, separator) tokens, preserving style tags.
 
-    e.g. 'hello <noto>μεγαλόψυχος</noto> world'
-         → ['hello', '<noto>μεγαλόψυχος</noto>', 'world']
+    The separator is the single space that followed the word, carrying the
+    style it had in the source (so <u>two words</u> underlines the gap too).
+    The last token's separator is "".
 
-    Spans that contain spaces (unusual but possible) are kept as single tokens.
+    e.g. 'a <i>b c</i>' -> [('a', ' '), ('<i>b</i>', '<i> </i>'), ('<i>c</i>', '')]
     """
-    # Build a flat sequence of (char, noto_flag) then reassemble into words.
-    chars: list[tuple[str, bool]] = []
-    for segment, noto in parse_spans(text):
-        for ch in segment:
-            chars.append((ch, noto))
+    chars: list[tuple[str, tuple[bool, ...]]] = []
+    for span in parse_spans(text):
+        flags = tuple(getattr(span, field) for field in _FLAG_FIELDS)
+        chars.extend((ch, flags) for ch in span.text)
 
-    if not chars:
-        return []
-
-    words: list[str] = []
-    current_chars: list[tuple[str, bool]] = []
-
-    def flush() -> None:
-        if not current_chars:
-            return
-        # Re-encode back into a tagged string
-        result = ""
-        in_noto = False
-        for ch, noto in current_chars:
-            if noto and not in_noto:
-                result += "<noto>"
-                in_noto = True
-            elif not noto and in_noto:
-                result += "</noto>"
-                in_noto = False
-            result += ch
-        if in_noto:
-            result += "</noto>"
-        words.append(result)
-        current_chars.clear()
-
-    for ch, noto in chars:
-        if ch == ' ':
-            flush()
+    tokens: list[tuple[str, str]] = []
+    word: list[tuple[str, tuple[bool, ...]]] = []
+    for ch, flags in chars:
+        if ch == " ":
+            if word:  # ignore leading / repeated spaces
+                tokens.append((_encode_chars(word), _encode_chars([(" ", flags)])))
+                word = []
         else:
-            current_chars.append((ch, noto))
-    flush()
+            word.append((ch, flags))
+    if word:
+        tokens.append((_encode_chars(word), ""))
+    return tokens
 
-    return words
+
+def _synth_bold_stroke(font: Any) -> int:
+    """Stroke width (px) used to fake bold for *font*."""
+    return max(1, round(getattr(font, "size", 24) / 24))
+
+
+def _variant_candidates(path: str, bold: bool, italic: bool) -> list[Path]:
+    """Likely file names for the bold/italic sibling of the font at *path*."""
+    p = Path(path)
+    stem, ext, folder = p.stem, p.suffix, p.parent
+
+    if bold and italic:
+        names, short = ["BoldItalic", "Bold-Italic", "BoldOblique", "Bold_Italic"], ["bi"]
+    elif bold:
+        names, short = ["Bold"], ["bd"]
+    else:
+        names, short = ["Italic", "Oblique"], ["i"]
+
+    out: list[Path] = []
+    if re.search("regular", stem, re.IGNORECASE):
+        # AtkinsonHyperlegible-Regular -> AtkinsonHyperlegible-Bold, NotoSans-Regular -> ...
+        for n in names:
+            out.append(folder / (re.sub("regular", n, stem, flags=re.IGNORECASE) + ext))
+    else:
+        # DejaVuSans -> DejaVuSans-Bold / -Oblique ; arial -> arialbd / ariali
+        for n in names:
+            out.append(folder / f"{stem}-{n}{ext}")
+            out.append(folder / f"{stem}{n}{ext}")
+        for s in short:
+            out.append(folder / f"{stem}{s}{ext}")
+    return out
+
+
+def _fc_variant(base: Any, size: int, bold: bool, italic: bool) -> Any | None:
+    """Ask fontconfig for a bold/italic sibling of *base*'s family (Linux)."""
+    try:
+        family, _ = base.getname()
+        pattern = family + (":bold" if bold else "") + (":italic" if italic else "")
+        found = subprocess.run(["fc-match", "--format=%{file}", pattern],
+                               capture_output=True, text=True, timeout=2).stdout.strip()
+        if not found or not Path(found).exists():
+            return None
+        font = ImageFont.truetype(found, size)
+        fam, style = font.getname()
+        style = (style or "").lower()
+        if fam != family:
+            return None
+        if bold != ("bold" in style):
+            return None
+        if italic != ("italic" in style or "oblique" in style):
+            return None
+        return font
+    except Exception:
+        return None
+
+
+def _find_variant(base: Any, path: str, size: int,
+                  bold: bool, italic: bool) -> Any | None:
+    """Locate and load a real bold/italic font file, or return None."""
+    for cand in _variant_candidates(path, bold, italic):
+        if cand.exists():
+            try:
+                return ImageFont.truetype(str(cand), size)
+            except Exception:
+                pass
+    return _fc_variant(base, size, bold, italic)

@@ -6,6 +6,7 @@ import argparse
 from argparse import ArgumentParser, Namespace
 from dictionary_generator import DictionaryImageGenerator
 from dictionary_data import parse_txt_file
+from theme_config import PaletteSpec, HARMONY_OFFSETS
 
 
 def create_sample_file(output_path: str = "sample_word.txt") -> None:
@@ -47,7 +48,12 @@ Examples:
   %(prog)s -i word.txt --light --width 1000
   %(prog)s -i word.txt --random-theme
   %(prog)s -i word.txt --random-theme --seed 42
+  %(prog)s -i word.txt --primary "#8b1a1a" --harmony analogous
+  %(prog)s -i word.txt --ignore-palette --random-theme
   %(prog)s --sample  # Create sample input file
+
+Colour priority: manual --primary/--secondary/--tertiary/--harmony
+  > PALETTE_* fields in the TXT file > --random-theme > default theme.
         """
     )
     
@@ -62,12 +68,22 @@ Examples:
                         help="Generate a random color theme using OKLAB color space")
     _ = parser.add_argument("--seed", type=int, default=None,
                         help="Random seed for reproducible random themes")
+    _ = parser.add_argument("--primary", metavar="HEX",
+                        help="Primary colour (hex). Overrides PALETTE_PRIMARY in the TXT file")
+    _ = parser.add_argument("--secondary", metavar="HEX",
+                        help="Secondary colour (hex). Optional; derived from the harmony if omitted")
+    _ = parser.add_argument("--tertiary", metavar="HEX",
+                        help="Tertiary colour (hex). Optional; derived from the harmony if omitted")
+    _ = parser.add_argument("--harmony", metavar="MODE",
+                        help="Colour harmony: " + ", ".join(HARMONY_OFFSETS) + " (default: analogous)")
+    _ = parser.add_argument("--ignore-palette", action="store_true",
+                        help="Ignore PALETTE_* fields in the TXT file")
     _ = parser.add_argument("--font", "-f", help="Custom font file path for main text")
     _ = parser.add_argument("--ipa-font", help="Custom font file path for IPA pronunciation")
     _ = parser.add_argument("--font-size", "-s", type=int, default=24, 
                         help="Font size (default: 24)")
     _ = parser.add_argument("--width", "-w", type=int, default=1400, 
-                        help="Image width (default: 800)")
+                        help="Image width (default: 1400)")
     _ = parser.add_argument("--sample", action="store_true", 
                         help="Create sample TXT file and exit")
 
@@ -98,6 +114,19 @@ Examples:
             else:
                 output_path = "dictionary_definition.png"
         
+        # Resolve palette: CLI flags override PALETTE_* fields from the file
+        fields = {"primary": None, "harmony": None, "secondary": None, "tertiary": None}
+        if not args.ignore_palette:
+            fields["primary"] = data.palette_primary or None
+            fields["harmony"] = data.palette_harmony or None
+            fields["secondary"] = data.palette_secondary or None
+            fields["tertiary"] = data.palette_tertiary or None
+        for key in fields:
+            cli_value = getattr(args, key)
+            if cli_value is not None:
+                fields[key] = cli_value
+        palette = PaletteSpec.from_fields(**fields)
+
         # Create generator
         generator: DictionaryImageGenerator = DictionaryImageGenerator(
             dark_mode=not args.light,  # Dark mode unless --light is specified
@@ -105,8 +134,15 @@ Examples:
             theme_seed=args.seed,
             font_path=args.font,
             ipa_font_path=args.ipa_font,
-            font_size=args.font_size
+            font_size=args.font_size,
+            palette=palette
         )
+
+        if palette:
+            print(f"Palette: harmony={palette.harmony}  primary={palette.primary}  "
+                  f"secondary={palette.secondary or '(derived)'}  tertiary={palette.tertiary or '(derived)'}")
+            print(f"  -> bg {generator.bg_color}  text {generator.text_color}  accent {generator.accent_color}  "
+                  f"secondary {generator.secondary_color}  divider {generator.divider_color}")
 
         # Generate image from parsed data
         _ = generator.generate_image_from_data(
@@ -115,7 +151,7 @@ Examples:
             output_path=output_path
         )
         
-        if args.random_theme:
+        if args.random_theme and not palette:
             seed_info = f" (seed: {args.seed})" if args.seed else " (random seed)"
             print(f"Generated with random theme{seed_info}")
 
