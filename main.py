@@ -46,14 +46,15 @@ Examples:
   %(prog)s -i word.txt
   %(prog)s -i word.txt -o custom_name.png
   %(prog)s -i word.txt --light --width 1000
-  %(prog)s -i word.txt --random-theme
-  %(prog)s -i word.txt --random-theme --seed 42
+  %(prog)s -i word.txt --seed 42            # reproducible random theme
   %(prog)s -i word.txt --primary "#8b1a1a" --harmony analogous
-  %(prog)s -i word.txt --ignore-palette --random-theme
+  %(prog)s -i word.txt --ignore-palette     # force a random theme
+  %(prog)s -i word.txt --plain-theme        # static default theme, no randomness
   %(prog)s --sample  # Create sample input file
 
 Colour priority: manual --primary/--secondary/--tertiary/--harmony
-  > PALETTE_* fields in the TXT file > --random-theme > default theme.
+  > PALETTE_* fields in the TXT file (rare) > random theme (the default)
+  > static default theme (only with --plain-theme).
         """
     )
     
@@ -65,7 +66,9 @@ Colour priority: manual --primary/--secondary/--tertiary/--harmony
     _ = parser.add_argument("--light", "-l", action="store_true", 
                         help="Use light mode instead of dark mode")
     _ = parser.add_argument("--random-theme", "-r", action="store_true",
-                        help="Generate a random color theme using OKLAB color space")
+                        help="Random OKLAB colour theme (now the default; kept for compatibility)")
+    _ = parser.add_argument("--plain-theme", action="store_true",
+                        help="Use the static dark/light theme instead of a random one")
     _ = parser.add_argument("--seed", type=int, default=None,
                         help="Random seed for reproducible random themes")
     _ = parser.add_argument("--primary", metavar="HEX",
@@ -77,7 +80,7 @@ Colour priority: manual --primary/--secondary/--tertiary/--harmony
     _ = parser.add_argument("--harmony", metavar="MODE",
                         help="Colour harmony: " + ", ".join(HARMONY_OFFSETS) + " (default: analogous)")
     _ = parser.add_argument("--ignore-palette", action="store_true",
-                        help="Ignore PALETTE_* fields in the TXT file")
+                        help="Ignore PALETTE_* fields in the TXT file (a random theme is used instead)")
     _ = parser.add_argument("--font", "-f", help="Custom font file path for main text")
     _ = parser.add_argument("--ipa-font", help="Custom font file path for IPA pronunciation")
     _ = parser.add_argument("--font-size", "-s", type=int, default=24, 
@@ -130,7 +133,7 @@ Colour priority: manual --primary/--secondary/--tertiary/--harmony
         # Create generator
         generator: DictionaryImageGenerator = DictionaryImageGenerator(
             dark_mode=not args.light,  # Dark mode unless --light is specified
-            random_theme=args.random_theme,
+            random_theme=not args.plain_theme,  # random is the default
             theme_seed=args.seed,
             font_path=args.font,
             ipa_font_path=args.ipa_font,
@@ -151,8 +154,8 @@ Colour priority: manual --primary/--secondary/--tertiary/--harmony
             output_path=output_path
         )
         
-        if args.random_theme and not palette:
-            seed_info = f" (seed: {args.seed})" if args.seed else " (random seed)"
+        if not args.plain_theme and not palette:
+            seed_info = f" (seed: {args.seed})" if args.seed is not None else " (random seed)"
             print(f"Generated with random theme{seed_info}")
 
     except FileNotFoundError:

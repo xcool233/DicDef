@@ -1,4 +1,4 @@
-I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **Sinister**, including a colour palette that suits the word's mood.
+I have a dictionary image generator program that creates visual dictionary entries. I need you to create a properly formatted entry for the word **Plight**. Leave out the colour palette unless the word's theme is overwhelmingly obvious (see the **Colour Palette** section) — the program picks a random theme by default.
 
 ### Required Format Specifications:
 
@@ -7,8 +7,9 @@ I have a dictionary image generator program that creates visual dictionary entri
 WORD: [word]
 PRONUNCIATION: [IPA pronunciation]
 
+[PALETTE LINES — OMIT BY DEFAULT. Include these only when the word's theme is overwhelmingly obvious:]
 PALETTE_HARMONY: [monochromatic | analogous | complementary | split-complementary | triadic | tetradic]
-PALETTE_PRIMARY: [hex colour, e.g. #8b1a1a]
+PALETTE_PRIMARY: [hex colour, e.g. #c0392b]
 PALETTE_SECONDARY: [hex colour — optional]
 PALETTE_TERTIARY: [hex colour — optional]
 
@@ -47,7 +48,7 @@ ADDITIONAL_ETYMOLOGY: [detailed etymology with multiple paragraphs if needed]
 
 9. **No Antonyms**: Do not include an ANTONYMS field (this feature has been removed)
 
-10. **Colour Palette**: Choose a palette that reflects the word's mood, using the rules in the **Colour Palette** section below.
+10. **Colour Palette (omit by default)**: Random themes are preferred. Do **not** include any `PALETTE_` lines unless the word's theme is overwhelmingly obvious, as defined in the **Colour Palette** section below. When in doubt, leave them out.
 
 **Additional Context — Layout:**
 - The output is rendered as a professional **two-column image**:
@@ -61,9 +62,21 @@ ADDITIONAL_ETYMOLOGY: [detailed etymology with multiple paragraphs if needed]
 
 ### Colour Palette
 
-The program builds the whole colour theme (background, text, headings, secondary text, divider lines) from a small palette that **you** choose. You pick the *mood* — the program does the colour maths, so the result is cohesive and always readable.
+**Default: no palette.** When an entry has no `PALETTE_` lines, the program generates a **random theme** (a random hue with matching background, text, accent and divider colours). Random themes are the preferred look, so **leave the palette out in almost every entry.**
 
-**What to supply**
+**Only add a palette when the word's theme is overwhelmingly obvious.** That means the word *is* a colour, or is so inseparable from one specific colour that practically anyone would name that same colour instantly and without hesitation. Apply this test: *"If ten people were asked what colour this word is, would all ten give essentially the same answer?"* If the answer is anything other than a clear yes, **omit the palette.**
+
+**Qualifies (add a palette):**
+- The word names a colour or a colour-defined thing: *crimson*, *cerulean*, *vermilion*, *chartreuse*, *verdigris*, *indigo*, *saffron*
+- The word's meaning is tied to one unmistakable colour: *emerald* (green), *sanguine* in its blood sense (red), *ebony* (black)
+
+**Does NOT qualify (omit the palette — use the random theme):**
+- Mood or emotion words: *sinister*, *serene*, *melancholy*, *effervescent*, *wrath*, *whimsical*
+- Abstract or concept words: *ephemeral*, *serendipity*, *ubiquitous*, *magnanimous*
+- Words that merely *suggest* a colour or could plausibly suit several (e.g. *twilight*, *verdant*, *tenacious*)
+- Any word where you had to think about which colour fits — **when in doubt, omit**
+
+**What to supply (only when the word qualifies)**
 
 | Field | Required? | What it does |
 |---|---|---|
@@ -85,32 +98,27 @@ If you leave out `PALETTE_SECONDARY` and/or `PALETTE_TERTIARY`, the program **de
 | `triadic` | Evenly spaced (120° / 240°) | Vibrant, playful, energetic words |
 | `tetradic` | 60° and 180° | Rich, complex, varied; use sparingly |
 
-**How to choose the primary colour**
+**How to choose the primary colour (for qualifying words only)**
 
-1. Decide the word's dominant mood (e.g. sinister → menace and dread; serene → calm; effervescent → bright and lively).
-2. Pick **one** clear, saturated base colour for that mood. Think "what colour *is* this word?" — for example:
-   - sinister, wrath, visceral → deep or blood red (`#8b1a1a`)
-   - serene, tranquil, ethereal → soft blue or teal (`#3b7ea1`)
-   - verdant, tenacious, pastoral → green (`#2e7d4f`)
-   - lugubrious, melancholy, twilight → indigo or slate violet (`#4b4a8f`)
-   - effervescent, jubilant, sanguine → warm amber or gold (`#d98e04`)
-   - ephemeral, whimsical, saccharine → rose or pink (`#c2557f`)
-3. Choose the harmony mode from the table above that supports that mood.
-4. Don't worry about making the primary light or dark enough to read — the program automatically adjusts **lightness only** (never the hue) so text and headings stay clearly legible in both dark and light modes.
+1. Use the colour the word itself names or is unmistakably tied to (e.g. *crimson* → `#a3122a`, *cerulean* → `#2a7fba`, *chartreuse* → `#7fff00`-ish, toned to `#8fc31f`, *saffron* → `#e0a010`).
+2. Choose the harmony mode from the table above that supports the word's feel; `analogous` is the safe default.
+3. Don't worry about making the primary light or dark enough to read — the program automatically adjusts **lightness only** (never the hue) so text and headings stay clearly legible in both dark and light modes.
 
 **Rules**
 - Always use **6-digit hex codes** with a leading `#` (e.g. `#8b1a1a`).
 - Use the harmony names **exactly** as listed (lowercase, hyphenated).
 - If you supply `PALETTE_SECONDARY` / `PALETTE_TERTIARY`, they should actually follow the chosen harmony (e.g. for `analogous`, hues about 30° either side of the primary; for `complementary`, the secondary on the opposite side of the colour wheel). If you aren't certain, omit them.
-- If `PALETTE_PRIMARY` is missing or invalid, the entire palette is ignored with a warning and the default or random theme is used instead.
-- Place the four `PALETTE_` lines directly after `PRONUNCIATION`, as in the template.
+- If `PALETTE_PRIMARY` is missing or invalid, the entire palette is ignored with a warning and the random theme is used instead.
+- When you do include a palette, place the `PALETTE_` lines directly after `PRONUNCIATION`, as in the template. When you don't, simply leave the lines out — don't write empty `PALETTE_` fields or comments about the palette.
 
-**Example for "Sinister"**
+**Example for "Sinister"** — a mood word, so **no palette lines at all**; the random theme is used.
+
+**Example for "Crimson"** — the word names its colour, so a palette is appropriate:
 ```
 PALETTE_HARMONY: analogous
-PALETTE_PRIMARY: #8b1a1a
+PALETTE_PRIMARY: #a3122a
 ```
-(A deep blood-red primary with analogous neighbours gives a dark maroon background with red and rust accents. Secondary and tertiary are derived automatically.)
+(A deep crimson primary with analogous neighbours gives a dark maroon background with red and rust accents. Secondary and tertiary are derived automatically.)
 
 ---
 
@@ -157,9 +165,6 @@ Plain Latin text — including romanised transliterations — does **not** need 
 WORD: Example
 PRONUNCIATION: ɪɡˈzæmpəl
 
-PALETTE_HARMONY: analogous
-PALETTE_PRIMARY: #3b7ea1
-
 DEFINITION: A thing characteristic of its kind or illustrating a general rule
 PART_OF_SPEECH: Noun
 USAGE: This painting is a perfect example of the Impressionist style.
@@ -200,13 +205,14 @@ The image is saved in the current folder, named after the word with a capital fi
 | `--output FILE` | `-o` | Output image path | Word from the file + `.png` |
 | `--dark` | `-d` | Dark mode | On |
 | `--light` | `-l` | Light mode instead of dark | Off |
-| `--random-theme` | `-r` | Random OKLAB colour theme (only used when no palette applies) | Off |
+| `--random-theme` | `-r` | Random OKLAB colour theme (only used when no palette applies). Now the default; the flag is kept for compatibility | On |
+| `--plain-theme` | | Use the static dark/light theme instead of a random one | Off |
 | `--seed N` | | Seed for a reproducible random theme | Random |
 | `--primary HEX` | | Primary colour; overrides `PALETTE_PRIMARY` in the file | From file |
 | `--secondary HEX` | | Secondary colour; overrides `PALETTE_SECONDARY` | From file / derived |
 | `--tertiary HEX` | | Tertiary colour; overrides `PALETTE_TERTIARY` | From file / derived |
 | `--harmony MODE` | | `monochromatic`, `analogous`, `complementary`, `split-complementary`, `triadic`, `tetradic` | `analogous` |
-| `--ignore-palette` | | Ignore all `PALETTE_` fields in the file | Off |
+| `--ignore-palette` | | Ignore all `PALETTE_` fields in the file (a random theme is used instead) | Off |
 | `--font FILE` | `-f` | Custom font file for main text | Atkinson Hyperlegible |
 | `--ipa-font FILE` | | Custom font file for IPA pronunciation | Noto Sans |
 | `--font-size N` | `-s` | Base font size in pixels | 24 |
@@ -216,15 +222,15 @@ The image is saved in the current folder, named after the word with a capital fi
 ### Which colours win?
 Highest priority first:
 1. Command-line colour flags (`--primary`, `--secondary`, `--tertiary`, `--harmony`)
-2. `PALETTE_` fields in the TXT file
-3. `--random-theme`
-4. The default dark or light theme
+2. `PALETTE_` fields in the TXT file (rare — only for words whose theme is overwhelmingly obvious)
+3. **A random theme (the default)**
+4. The static dark or light theme (only with `--plain-theme`)
 
-So `--random-theme` is a safe fallback: if the file has a palette, the palette is used; if not, a random theme is generated. Add `--ignore-palette --random-theme` to force a random theme anyway. `--light` and `--dark` still apply to palettes — the same palette renders as either a dark or a light design.
+So most entries, which have no palette, get a random theme automatically. Add `--ignore-palette` to force a random theme even when the file has a palette. `--light` and `--dark` still apply to everything — the same theme renders as either a dark or a light design.
 
 ### Examples
 ```
-# Standard render using the palette in the file
+# Standard render (random theme, or the file's palette if it has one)
 python3 main.py -i DicDef.txt
 
 # Light version of the same palette
@@ -239,14 +245,17 @@ python3 main.py -i DicDef.txt --harmony complementary
 # Override the colour completely from the command line
 python3 main.py -i DicDef.txt --primary "#8b1a1a" --harmony split-complementary
 
-# Ignore the file's palette and use a reproducible random theme
-python3 main.py -i DicDef.txt --ignore-palette --random-theme --seed 42
+# Reproducible random theme (use --ignore-palette too if the file has a palette)
+python3 main.py -i DicDef.txt --seed 42
+
+# Use the static default theme instead of a random one
+python3 main.py -i DicDef.txt --plain-theme
 
 # Create a sample input file to see the format
 python3 main.py --sample
 ```
 
-When a palette is used, the program prints the harmony and the final background, text, accent, secondary and divider colours so you can see exactly what was applied.
+When a palette is used (or a random theme is generated), the program prints the harmony and the final background, text, accent, secondary and divider colours so you can see exactly what was applied.
 
 ### Troubleshooting
 - **`Error: File '…' not found`** — check the `--input` path and run the command from the program's folder.
@@ -268,5 +277,5 @@ When a palette is used, the program prints the harmony and the final background,
 7. **Non-Latin Script**: Use `<noto>…</noto>` tags around Greek, Arabic, Hebrew, Cyrillic, and similar characters so they render with the correct Unicode font; transliterated text in plain Latin letters does not need tags
 8. **Don't Add Quotes Around Usage**: The renderer automatically wraps usage examples in `"…"` — if you add them yourself, they will be double-quoted in the output
 9. **Word Forms Are Optional**: Only include `WORD_FORMS` when the word has genuinely useful derived forms worth showing; skip the field for words without notable variants rather than padding it out
-10. **Let the Mood Drive the Colour**: Choose the primary colour from the word's emotional tone, not just its literal meaning, and prefer deriving secondary and tertiary colours from the harmony rather than inventing them
-11. **One Saturated Primary Is Enough**: A single clear base colour plus a harmony mode produces a more cohesive result than several hand-picked hex codes
+10. **Default to the Random Theme**: Omit all `PALETTE_` lines unless the word itself is a colour or is unmistakably tied to one. Mood alone is *not* enough — when in doubt, leave the palette out
+11. **If You Do Add a Palette, Keep It Simple**: A single clear primary plus a harmony mode produces a more cohesive result than several hand-picked hex codes; let secondary and tertiary be derived

@@ -14,7 +14,7 @@ from dictionary_data import DictionaryData, parse_txt_file
 class DictionaryImageGenerator:
     """Main class for generating dictionary definition images."""
     
-    def __init__(self, dark_mode: bool = True, random_theme: bool = False, 
+    def __init__(self, dark_mode: bool = True, random_theme: bool = True, 
                 theme_seed: int | None = None, font_path: str | None = None, 
                 ipa_font_path: str | None = None, font_size: int = 24,
                 palette: PaletteSpec | None = None) -> None:
@@ -23,7 +23,7 @@ class DictionaryImageGenerator:
         
         Args:
             dark_mode: Use dark mode theme (default: True)
-            random_theme: Generate random color scheme using OKLAB (default: False)
+            random_theme: Generate random color scheme using OKLAB (default: True)
             theme_seed: Random seed for reproducible random themes (default: None)
             font_path: Custom font file path for main text (default: None)
             ipa_font_path: Custom font file path for IPA pronunciation (default: None)

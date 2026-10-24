@@ -1,29 +1,22 @@
-WORD: Sinister
-PRONUNCIATION: ˈsɪnɪstər
+WORD: Plight
+PRONUNCIATION: plaɪt
 
-PALETTE_HARMONY: analogous
-PALETTE_PRIMARY: #8b1a1a
+DEFINITION: A dangerous, difficult, or unfortunate situation, especially one from which it is hard to escape
+PART_OF_SPEECH: Noun
+USAGE: The plight of the stranded hikers worsened as the storm closed in.
 
-DEFINITION: Giving the impression that something harmful, evil, or threatening is about to happen; suggestive of malevolent intent
-PART_OF_SPEECH: Adjective
-USAGE: A sinister silence settled over the house as the lights flickered and went out one by one.
+DEFINITION: To pledge or promise solemnly, especially in the phrase <i>plight one's troth</i> (to promise fidelity or marriage)
+PART_OF_SPEECH: Verb
+USAGE: They plighted their troth beneath the old oak tree at dawn.
 
-DEFINITION: Pertaining to, or situated on, the left side; in heraldry, the side of a shield to the bearer's left (the viewer's right)
-PART_OF_SPEECH: Adjective
-USAGE: The coat of arms showed a lion on the sinister side of the shield, facing away from the centre.
+SYNONYMS: predicament, quandary, dilemma, straits, difficulty
 
-DEFINITION: Foreboding misfortune; regarded as ill-omened or unlucky
-PART_OF_SPEECH: Adjective
-USAGE: The villagers saw the crows gathering on the rooftops as a sinister sign of the hard winter ahead.
+WORD_FORMS: plighted (adj.), plighting (v.), plighter (n.)
 
-SYNONYMS: menacing, ominous, malevolent, threatening, baleful
+ETYMOLOGY: The noun meaning "predicament" comes from Anglo-French <i>plit</i>, a variant of Old French <i>pleit</i> ("a fold, a condition"), from Latin <i>plicare</i>, "to fold". The verb meaning "to pledge" is a separate word, from Old English <i>plihtan</i>, "to endanger, to pledge".
 
-WORD_FORMS: sinisterly (adv.), sinisterness (n.), sinistral (adj.), sinistrous (adj.)
+ADDITIONAL_ETYMOLOGY: In Middle English, the noun appeared as <i>plit</i> or <i>plyt</i> and meant "a condition, state, or manner of being", with no suggestion of misfortune. It grew from the Old French sense of a "fold", which came to mean the way something is arranged or "folded", and so its state or condition. The Latin source <i>plicare</i> is also the root of English <i>pliant</i>, <i>complicate</i>, <i>display</i>, <i>employ</i> and <i>pleat</i>.
 
-ETYMOLOGY: From Old French <i>sinistre</i>, from Latin <i>sinister</i>, meaning "left" or "on the left side," and by extension "unlucky" or "inauspicious." The ultimate origin of the Latin word is uncertain.
+The modern spelling with <i>-gh-</i> arose in the 16th century through confusion with the unrelated verb <i>plight</i>, "to pledge". That verb descends from Old English <i>pliht</i>, "danger, risk, peril", and is related to German <i>Pflicht</i>, "duty". Over time the spellings merged, and the noun's meaning drifted from a neutral "condition" toward the negative sense of a bad state, so that today we speak of "a sorry plight".
 
-ADDITIONAL_ETYMOLOGY: The Latin <i>sinister</i> originally meant simply "left," as opposed to <i>dexter</i>, "right." Its sense of misfortune arose from the way Roman augurs interpreted omens. Roman priests, facing south, took signs from the east (their left) as favourable, so <i>sinister</i> could mean "auspicious" in Latin. Greek augural practice, however, treated the left as the unlucky side, and this view, combined with the widespread cultural prejudice against left-handedness, eventually dominated. The Greek word <noto><i>ἀριστερός</i></noto> (aristeros), "left," was itself a euphemism, literally "the better one," used to avoid naming the unlucky side directly.
-
-The word entered Middle English in the 15th century through Old French, carrying both the literal sense of "left" and the figurative senses of "unfavourable" and "unlucky." By the 16th century the sense of "evil" or "malevolent" had taken firm hold, as in the idea of a sinister motive or design. The literal sense survives in heraldry, where the sinister side of a shield is the bearer's left. The related phrase <i>bend sinister</i> is a diagonal band running from the shield's upper right to lower left, which was popularly (though inaccurately) associated with illegitimacy.
-
-The same root gave Italian <i>sinistra</i> and Spanish <i>siniestro</i>, both of which retain the sense of "left" alongside "ominous." English <i>sinistral</i>, meaning "left-handed" or "coiling to the left" (as in certain snail shells), is a modern scientific borrowing from the same Latin source.
+The two words now look identical, but one traces back to folding and the other to risk and obligation. Only the phrase <i>plight one's troth</i> keeps the older pledging sense in everyday use.
